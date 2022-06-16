@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="DesignSurface">
+    <option name="filePathToZoomLevelMap">
+      <map>
+        <entry key="../../../../../layout/compose-model-1655326364264.xml" value="0.22" />
+        <entry key="../../../../../layout/compose-model-1655329663516.xml" value="0.9740740740740741" />
+        <entry key="app/src/main/res/drawable/ic_baseline_back_arrow_24.xml" value="0.207" />
+        <entry key="app/src/main/res/drawable/ic_baseline_down_24.xml" value="0.2045" />
+        <entry key="app/src/main/res/drawable/ic_baseline_edit_24.xml" value="0.207" />
+        <entry key="app/src/main/res/drawable/ic_baseline_hierarchy_24.xml" value="0.198" />
+        <entry key="app/src/main/res/drawable/ic_baseline_history.xml" value="0.198" />
+        <entry key="app/src/main/res/drawable/ic_baseline_history_24.xml" value="0.2045" />
+        <entry key="app/src/main/res/drawable/ic_baseline_home_24.xml" value="0.198" />
+        <entry key="app/src/main/res/drawable/ic_baseline_more_24.xml" value="0.2045" />
+        <entry key="app/src/main/res/drawable/ic_baseline_plus_24.xml" value="0.2045" />
+        <entry key="app/src/main/res/drawable/ic_baseline_search_24.xml" value="0.2045" />
+        <entry key="app/src/main/res/drawable/ic_baseline_view_24.xml" value="0.207" />
+        <entry key="app/src/main/res/drawable/ic_launcher_background.xml" value="0.2045" />
+        <entry key="app/src/main/res/layout/activity_task.xml" value="0.26614583333333336" />
+        <entry key="app/src/main/res/layout/activity_task_.xml" value="0.19114583333333332" />
+      </map>
+    </option>
+  </component>
+  <component name="ProjectRootManager" version="2" languageLevel="JDK_11" default="true" project-jdk-name="Android Studio default JDK" project-jdk-type="JavaSDK">
+    <output url="file://$PROJECT_DIR$/build/classes" />
+  </component>
+  <component name="ProjectType">
+    <option name="id" value="Android" />
+  </component>
+</project>

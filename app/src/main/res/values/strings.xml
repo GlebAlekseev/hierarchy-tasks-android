@@ -1,0 +1,14 @@
+<resources>
+    <string name="app_name">Project_AM_Manager</string>
+
+    <string name="home">home</string>
+    <string name="hierarchy">hierarchy</string>
+    <string name="history">history</string>
+    <string name="task">task</string>
+
+    <string name="view">view</string>
+    <string name="edit">edit</string>
+    <string name="search">search</string>
+
+
+</resources>

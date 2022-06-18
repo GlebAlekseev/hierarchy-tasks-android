@@ -44,10 +44,14 @@ import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
+import com.example.project_am_manager.DataMain
 import com.example.project_am_manager.MainActivity
 import com.example.project_am_manager.R
+import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.PagerState
 import com.skyyo.expandablelist.cards.BoardsScreen
+import components.alertdialog.AlertDialogAdding
+import components.alertdialog.AlertDialogEditing
 import domain.model.BoardModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.awaitCancellation
@@ -64,81 +68,34 @@ import kotlin.math.abs
 import kotlin.math.roundToInt
 
 
-@OptIn(ExperimentalMaterialApi::class)
+@OptIn(ExperimentalMaterialApi::class, ExperimentalPagerApi::class)
 @Composable
 fun HierarchyScreen(
-    screenState: MutableState<Screen>,
-    viewModel: MainViewModel,
-    currentBoard: MutableState<Long>,
-    scale: MutableState<Float>,
-    offset_content: MutableState<Offset>,
-    stateModal: ModalBottomSheetState,
-    openDialogEditing: MutableState<Boolean>
+    dataMain: DataMain
 ) {
-    BackButtonAction {
-        TManagerRouter.goBack()
-    }
-
-
-
-
-    TransformableSample(viewModel,currentBoard,scale,offset_content,stateModal,openDialogEditing)
-    val scrollableStateHorizontal = rememberScrollState()
-
-
-
-    val allBoards: List<BoardModel> by viewModel.allBoards.observeAsState(emptyList())
-//    Row(modifier = Modifier
-//        .offset(offset.value.x.dp, offset.value.y.dp)
-//        .horizontalScroll(scrollableStateHorizontal)
-//
-//
-//    ) {
-//        Button(onClick = {
-//            scale.value = 0.6f
-//            offset_content.value = Offset(0f,0f)
-//
-//                         },
-//        Modifier
-//        .padding(5.dp)) {
-//            Text(text = "Сбросить положение")
-//
-//        }
+//    BackButtonAction {
+//        TManagerRouter.goBack()
 //    }
+//
 
+
+
+    TransformableSample(dataMain)
 }
-@OptIn(ExperimentalMaterialApi::class, ExperimentalComposeUiApi::class)
+@OptIn(ExperimentalMaterialApi::class, ExperimentalComposeUiApi::class, ExperimentalPagerApi::class)
 @Composable
 fun TransformableSample(
-    viewModel: MainViewModel,
-    currentBoard: MutableState<Long>,
-    scale: MutableState<Float>,
-    offset: MutableState<Offset>,
-    stateModal: ModalBottomSheetState,
-    openDialogEditing: MutableState<Boolean>
+    dataMain: DataMain
 ) {
-    val allBoards: List<BoardModel> by viewModel.allBoards.observeAsState(emptyList())
-
-
-
-//    listOffsetsBoards.forEach{
-//        println("id=$it.board?.id and offset=${it.offset}" )
-//    }
-
-
     val state_scroll_horizontal = rememberScrollState()
     val state_scroll_vertical = rememberScrollState()
 
     val state = rememberTransformableState { zoomChange, offsetChange, rotationChange ->
-        if (scale.value*zoomChange >= 0.33){
-            scale.value *= zoomChange
-            println("scale=$scale and zoomChange=$zoomChange ||||| offset=$offset and offsetChange=$offsetChange")
-            offset.value += offsetChange
+        if (dataMain.scale_content.value*zoomChange >= 0.33){
+            dataMain.scale_content.value *= zoomChange
+            dataMain.offset_content.value += offsetChange
         }
     }
-
-//
-
 
     Box(
         Modifier
@@ -149,15 +106,14 @@ fun TransformableSample(
             .pointerInput(Unit) {
                 detectDragGestures { change, dragAmount ->
                     change.consumeAllChanges()
-                    offset.value += dragAmount
-                    println("offset=$offset")
+                    dataMain.offset_content.value += dragAmount
                 }
             }
             .transformable(state = state)
-            .offset { IntOffset((offset.value.x).roundToInt(), (offset.value.y).roundToInt()) }
+            .offset { IntOffset((dataMain.offset_content.value.x).roundToInt(), (dataMain.offset_content.value.y).roundToInt()) }
             .graphicsLayer(
-                scaleX = scale.value,
-                scaleY = scale.value,
+                scaleX = dataMain.scale_content.value,
+                scaleY = dataMain.scale_content.value,
             )
     ){
         Box(modifier= Modifier
@@ -169,37 +125,27 @@ fun TransformableSample(
                 mutableStateOf(Screen.Hierarchy)
             }
 
-
-
-
-            // Пазместить контент по центру с масштабом
             Column(modifier = Modifier
                 .align(Alignment.Center)
                 .background(Color.White)) {
-            when(screenHierarchyState.value){
-                Screen.Hierarchy2 -> BuildingHierarchy(viewModel,currentBoard,stateModal,screenHierarchyState,openDialogEditing)
-                Screen.Hierarchy -> BuildingHierarchy(viewModel,currentBoard,stateModal,screenHierarchyState,openDialogEditing)
-                else -> {}
+                when(screenHierarchyState.value){
+                    Screen.Hierarchy2 -> BuildingHierarchy(dataMain, screenHierarchyState)
+                    Screen.Hierarchy -> BuildingHierarchy(dataMain, screenHierarchyState)
+                    else -> {}
+                }
             }
-        }
-
-
-
-
-
         }
     }
 }
-@OptIn(ExperimentalMaterialApi::class)
+
+
+@OptIn(ExperimentalMaterialApi::class, ExperimentalPagerApi::class)
 @Composable
 fun BuildingHierarchy(
-    viewModel: MainViewModel,
-    currentBoard: MutableState<Long>,
-    stateModal: ModalBottomSheetState,
-    screenHierarchyState: MutableState<Screen>,
-    openDialogEditing: MutableState<Boolean>
+    dataMain: DataMain,
+    screenHierarchyState: MutableState<Screen>
 ){
-    val allBoards: List<BoardModel> by viewModel.allBoards.observeAsState(emptyList())
+    val allBoards: List<BoardModel> by dataMain.viewModel.allBoards.observeAsState(emptyList())
 
 
         Row() {
@@ -212,11 +158,11 @@ fun BuildingHierarchy(
                 .align(Alignment.CenterVertically)
             ) {
 
-                Board(viewModel,allBoards.filter { it.id == it.parent_id }.firstOrNull(),currentBoard,listOffsetsBoards,stateModal,screenHierarchyState,openDialogEditing)
+                Board(dataMain.viewModel,allBoards.filter { it.id == it.parent_id }.firstOrNull(),dataMain.currentBoard,listOffsetsBoards,dataMain.stateModal,screenHierarchyState,dataMain.openDialogEditing)
             }
             Column(modifier = Modifier.align(Alignment.CenterVertically)) {
 
-                ColumnZ(allBoards.filter { it.id == it.parent_id }.firstOrNull().let { if (it != null) it.id else 0L } ,viewModel,currentBoard,listOffsetsBoards,stateModal,screenHierarchyState,openDialogEditing)
+                ColumnZ(allBoards.filter { it.id == it.parent_id }.firstOrNull().let { if (it != null) it.id else 0L } ,dataMain.viewModel,dataMain.currentBoard,listOffsetsBoards,dataMain.stateModal,screenHierarchyState,dataMain.openDialogEditing)
 
             }
         }
@@ -347,8 +293,6 @@ fun Board(
 
     AlertDialogEditing(openDialog = openDialogEditing, nameBoardState = nameBoardStateEditing, viewModel = viewModel,board,currentBoard,stateModal,scope)
 
-//    val requestDisallowInterceptTouchEvent = RequestDisallowInterceptTouchEvent()
-//    requestDisallowInterceptTouchEvent.invoke(false)
 
     var expanded by remember { mutableStateOf(false) }
     DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false  },modifier = Modifier
@@ -537,7 +481,7 @@ Column (modifier= Modifier
             expanded = true
         },
     )
-
+    .padding(15.dp)
 
 
 ){
@@ -560,17 +504,8 @@ Column (modifier= Modifier
 
 
 fun getAllParentsBoardIds(board:BoardModel?,listBoard: List<BoardModel>): List<Long>{
-
-    // Вернуть список всех родителей для board
     var parentsBoard = mutableListOf<Long>()
-    // Получаю родителя
 
-
-//    val Id = parentBoard.lastOrNull().let { if (it != null) it.id else -1L }
-//    if (Id != -1L){
-//        parentsBoard.add(Id)
-//        getAllParentsBoard(parentBoard.lastOrNull(),listBoard)
-//    }
     var parentBoard : BoardModel? = board
     parentsBoard.add(parentBoard!!.id)
     var i = 0
@@ -581,136 +516,13 @@ fun getAllParentsBoardIds(board:BoardModel?,listBoard: List<BoardModel>): List<L
         i++
     }
 
-
-
-    println("777777777parentsBoard=$parentsBoard")
     return parentsBoard
 }
 
 
 
 
-@Composable
-fun AlertDialogAdding(openDialog:MutableState<Boolean>,nameBoardState: MutableState<TextFieldValue>,viewModel: MainViewModel,board: BoardModel?) {
-    if (openDialog.value) {
-        AlertDialog(
-            onDismissRequest = {
-                openDialog.value = false
-            },
-            title = {
-                Text(text = "Добавление доски")
-            },
-            text = {
-                Column() {
-                    Text("Название")
-                    TextField(value = nameBoardState.value, onValueChange = {nameBoardState.value = it})
-                }
-
-            },
-            confirmButton = {
-                Button(
-
-                    onClick = {
-                        viewModel.insertBoard(BoardModel(0,nameBoardState.value.text, SimpleDateFormat("dd:MM:yyyy hh:mm:ss").format(
-                            Date()
-                        ),board.let { if (it != null) it.id else 0L }))
-                        openDialog.value = false
-
-                    }) {
-                    Text("Добавить")
-                }
-            }
-        )
-    }
-
-}
 
 
-@OptIn(ExperimentalMaterialApi::class)
-@Composable
-fun AlertDialogEditing(
-    openDialog: MutableState<Boolean>,
-    nameBoardState: MutableState<TextFieldValue>,
-    viewModel: MainViewModel,
-    board: BoardModel?,
-    currentBoard: MutableState<Long>,
-    stateModal: ModalBottomSheetState,
-    scope: CoroutineScope
-) {
-    val scopeOther = rememberCoroutineScope()
-    val allBoards: List<BoardModel> by viewModel.allBoards.observeAsState(emptyList())
-
-    if (openDialog.value) {
-        AlertDialog(
-            onDismissRequest = {
-                openDialog.value = false
-            },
-            title = {
-                Text(text = "Редактирование доски")
-            },
-            text = {
-                Column() {
-                    Text("Название")
-                    TextField(value = nameBoardState.value, onValueChange = {nameBoardState.value = it})
-                    Text(text = allBoards.filter { it.id == currentBoard.value }.firstOrNull()?.name.orEmpty(), modifier = Modifier.clickable{
-                        // Вызов выбора currentBoard
-                        if (stateModal.isVisible){
-                            scopeOther.launch {
-                                openDialog.value = true
-                                stateModal.hide()
-
-                            }
-                        }else{
-                            scopeOther.launch {
-                                openDialog.value = false
-                                stateModal.show()
-
-                            }
-                        }
 
 
-                    })
-                }
-
-
-            },
-            confirmButton = {
-                Button(
-
-                    onClick = {
-                        if(board.let { if (it != null) it.id else 1L } != 1L ){
-                            viewModel.updateBoard(BoardModel(board.let { if (it != null) it.id else 0L },nameBoardState.value.text, SimpleDateFormat("dd:MM:yyyy hh:mm:ss").format(
-                                Date()
-                            ),allBoards.filter { it.id == currentBoard.value }.firstOrNull().let { if (it != null) it.id else 0L }))
-                        }
-                        openDialog.value = false
-
-                    }) {
-                    Text("Сохранить")
-                }
-            }
-        )
-    }
-
-}
-
-@OptIn(ExperimentalMaterialApi::class)
-@Composable
-fun ModalBottomSheetChooseHierarchy(
-    stateModal: ModalBottomSheetState,
-    viewModel: MainViewModel,
-    currentBoard: MutableState<Long>,
-    openDialog: MutableState<Boolean>
-) {
-
-    ModalBottomSheetLayout(
-        sheetState = stateModal,
-        sheetContent = {
-         BoardsScreen(stateModal,viewModel, currentBoard,openDialog)
-        }
-    ) {
-
-
-    }
-
-}

@@ -1,22 +1,18 @@
 package components
 
-import androidx.compose.foundation.layout.Column
 import androidx.compose.material.AlertDialog
 import androidx.compose.material.Button
-import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.*
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import domain.model.BoardModel
 import domain.model.TaskModel
-import screens.task.EditInputs
-import screens.task.TaskActivity
+import com.example.project_am_manager.EditInputs
+import com.example.project_am_manager.TaskActivity
 
 
 @Composable
-fun AlertDialogSave(openDialog: MutableState<Boolean>,editInputs:EditInputs,id:Long) {
+fun AlertDialogSave(openDialog: MutableState<Boolean>, editInputs: EditInputs, id:Long) {
     val context = LocalContext.current as TaskActivity
 //    val allTasks: List<TaskModel> by editInputs.viewModel.allTasks.observeAsState(emptyList())
 

@@ -14,9 +14,9 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Project_AM_Manager"
         tools:targetApi="31">
-<!--        {com.example.project_am_manager/screens.task.TaskActivity};-->
+<!--        {com.example.project_am_manager/com.example.project_am_manager.TaskActivity};-->
         <activity
-            android:name="screens.task.TaskActivity"
+            android:name=".TaskActivity"
             android:exported="true" />
         <activity
             android:name=".MainActivity"

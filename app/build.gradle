@@ -97,6 +97,8 @@ dependencies {
 
     implementation "com.google.accompanist:accompanist-placeholder:$accompanist_version"
     implementation "com.google.accompanist:accompanist-swiperefresh:$accompanist_version"
+    implementation "com.google.accompanist:accompanist-navigation-animation:$accompanist_version"
+
 
     implementation "androidx.compose.runtime:runtime-livedata:$compose_version"
 }

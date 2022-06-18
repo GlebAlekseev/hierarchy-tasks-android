@@ -1,17 +1,10 @@
-package screens.task
+package com.example.project_am_manager
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.input.TextFieldValue
-import routing.BackButtonAction
-import routing.TaskRouter
-import viewmodel.MainViewModel
 
 @Composable
 fun ViewScreen(

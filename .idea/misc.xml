@@ -15,6 +15,7 @@
         <entry key="app/src/main/res/drawable/ic_baseline_more_24.xml" value="0.2045" />
         <entry key="app/src/main/res/drawable/ic_baseline_plus_24.xml" value="0.2045" />
         <entry key="app/src/main/res/drawable/ic_baseline_search_24.xml" value="0.2045" />
+        <entry key="app/src/main/res/drawable/ic_baseline_time_24.xml" value="0.1" />
         <entry key="app/src/main/res/drawable/ic_baseline_view_24.xml" value="0.207" />
         <entry key="app/src/main/res/drawable/ic_launcher_background.xml" value="0.2045" />
         <entry key="app/src/main/res/layout/activity_task.xml" value="0.26614583333333336" />

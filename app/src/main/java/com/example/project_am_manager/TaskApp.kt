@@ -1,11 +1,8 @@
-package screens.task
+package com.example.project_am_manager
 
-import android.util.Log
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
-import com.example.project_am_manager.R
 
 import androidx.compose.animation.Crossfade
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.runtime.*
@@ -19,6 +16,8 @@ import androidx.compose.ui.unit.dp
 import com.example.project_am_manager.ui.theme.Project_AM_ManagerTheme
 import com.skyyo.expandablelist.cards.BoardsScreen
 import components.AlertDialogSave
+import components.modalbottomsheet.ModalBottomSheetChoose
+import components.topbar.TopTaskAppBar
 import domain.model.TaskModel
 import kotlinx.coroutines.*
 import routing.BackButtonAction
@@ -32,10 +31,20 @@ import java.util.*
 fun TaskApp(viewModel: MainViewModel,id:Long) {
     Project_AM_ManagerTheme{
         AppContent(viewModel,id)
-
     }
 }
 
+@OptIn(ExperimentalMaterialApi::class)
+data class EditInputs(
+    val viewModel: MainViewModel,
+    val stateModal: ModalBottomSheetState,
+    val scope: CoroutineScope,
+    val scaffoldState: ScaffoldState,
+    val nameState: MutableState<TextFieldValue>,
+    var currentDate: String,
+    val descriptionState: MutableState<TextFieldValue>,
+    var parentBoardState: MutableState<Long>
+)
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
@@ -59,25 +68,15 @@ fun AppContent(viewModel: MainViewModel,id:Long){
     val editInputs = EditInputs(viewModel,stateModal,scope,scaffoldState,nameState,currentDate,descriptionState,parentBoardState)
 
 
-
-    // Анимация?!
     Crossfade(targetState = TaskRouter.currentScreen) { screenState: MutableState<ScreenTask> ->
-
         Scaffold(
-            topBar = {TopTaskAppBar(screenState,descriptionState)},
+            topBar = { TopTaskAppBar(screenState,descriptionState) },
             content = { MainScreenTaskContainer(screenState,editInputs) }
         )
-
     }
 
+    ModalBottomSheetChoose(editInputs = editInputs)
 
-    ModalBottomSheetChoose(editInputs)
-
-
-    // Если id == 0 - добавление
-    // Иначе - редактирование
-
-    // Передать данные полей в диалог, где выполнить операцию
 
     val openDialog = remember { mutableStateOf(false)  }
     AlertDialogSave(openDialog,editInputs,id)
@@ -99,122 +98,21 @@ fun AppContent(viewModel: MainViewModel,id:Long){
         }
 
     }
-
-
-
-
-
-
-
-}
-
-@Composable
-fun TopTaskAppBar(
-    screenState: MutableState<ScreenTask>,
-    descriptionState: MutableState<TextFieldValue>
-) {
-
-    val localBackPressed = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
-    Row(modifier = Modifier
-        .fillMaxWidth()
-        .padding(horizontal = 20.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-        Row() {
-            IconButton(
-                onClick = {
-                    localBackPressed?.onBackPressed()
-                          },
-                content = { Icon(imageVector = ImageVector.vectorResource(id = R.drawable.ic_baseline_back_arrow_24), contentDescription = "back")},
-            )
-            Text(text = "Символов: " + descriptionState.value.text.length)
-        }
-        Row() {
-            if (screenState.value == ScreenTask.Edit){
-            IconButton(
-                onClick = {screenState.value = ScreenTask.View},
-                content = { Icon(imageVector = ImageVector.vectorResource(id = R.drawable.ic_baseline_view_24), contentDescription = "view")},
-            )
-            }else if (screenState.value == ScreenTask.View){
-                IconButton(
-                    onClick = {screenState.value = ScreenTask.Edit},
-                    content = { Icon(imageVector = ImageVector.vectorResource(id = R.drawable.ic_baseline_edit_24), contentDescription = "edit")},
-                )
-            }
-        }
-    }
-
-
-
-
 }
 
 
-
-
-
-@OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun MainScreenTaskContainer(
     screenState: MutableState<ScreenTask>,
     editInputs: EditInputs
-//    screenState: MutableState<ScreenTask>,
-//    viewModel: MainViewModel,
-//    stateModal: ModalBottomSheetState,
-//    descriptionState: MutableState<TextFieldValue>,
-//    nameState: MutableState<TextFieldValue>,
-//    currentDate: String,
-//    parentBoardState: Long
 ){
-
-
-    // Запросить данные по id из Intent
-    // Если интенет пуст, тогда ничего
-
-
     when (screenState.value) {
         ScreenTask.Edit -> EditScreen(editInputs)
-//        ScreenTask.Edit -> EditScreen(viewModel,stateModal,descriptionState,nameState,currentDate,parentBoardState)
         ScreenTask.View -> ViewScreen(editInputs)
-//        ScreenTask.View -> ViewScreen(viewModel,descriptionState,nameState,currentDate,parentBoardState)
     }
-
-
-
-
 }
 
 
-@OptIn(ExperimentalMaterialApi::class)
-@Composable
-fun ModalBottomSheetChoose(
-    editInputs: EditInputs
-//    state: ModalBottomSheetState,
-//    scope: CoroutineScope,
-//    viewModel: MainViewModel
-) {
-
-    ModalBottomSheetLayout(
-        sheetState = editInputs.stateModal,
-        sheetContent = {
-
-            BoardsScreen(editInputs = editInputs, isAll = true)
-        }
-    ) {
 
 
-    }
 
-
-}
-
-
-@OptIn(ExperimentalMaterialApi::class)
-data class EditInputs(
-    val viewModel: MainViewModel,
-    val stateModal: ModalBottomSheetState,
-    val scope: CoroutineScope,
-    val scaffoldState: ScaffoldState,
-    val nameState: MutableState<TextFieldValue>,
-    var currentDate: String,
-    val descriptionState: MutableState<TextFieldValue>,
-    var parentBoardState: MutableState<Long>
-    )

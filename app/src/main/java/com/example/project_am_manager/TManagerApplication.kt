@@ -4,7 +4,6 @@ import android.app.Application
 import dependencyinjection.DependencyInjector
 
 class TManagerApplication: Application() {
-
     lateinit var dependencyInjector: DependencyInjector
 
     override fun onCreate() {
@@ -16,5 +15,4 @@ class TManagerApplication: Application() {
         dependencyInjector = DependencyInjector(this)
 
     }
-
 }

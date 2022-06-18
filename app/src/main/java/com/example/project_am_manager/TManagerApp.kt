@@ -1,211 +1,270 @@
 package com.example.project_am_manager
 
-import android.app.Activity
 import android.content.Intent
-import android.icu.number.Scale
-import android.util.Log
-import android.view.MotionEvent
-import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.animation.Crossfade
+import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 //import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.RequestDisallowInterceptTouchEvent
-import androidx.compose.ui.input.pointer.pointerInteropFilter
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavHostController
 import com.example.project_am_manager.ui.theme.Project_AM_ManagerTheme
+import com.google.accompanist.navigation.animation.AnimatedNavHost
+import com.google.accompanist.navigation.animation.composable
+import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.PagerState
 import com.google.accompanist.pager.rememberPagerState
 import com.skyyo.expandablelist.cards.BoardsScreen
-import com.skyyo.expandablelist.cards.CardsViewModel
+import components.floatingactionbutton.MainExtendedFloatingActionButton
+import components.modalbottomsheet.ModalBottomSheetChoose
+import components.topbar.HierarchyTopBar
+import components.topbar.HistoryTopBar
+import components.topbar.HomeTopBar
 import domain.model.BoardModel
 import domain.model.TaskModel
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.launch
-import routing.BackButtonAction
-import routing.BackButtonHandler
 import routing.Screen
 import routing.TManagerRouter
 import screens.HierarchyScreen
 import screens.HistoryScreen
 import screens.HomeScreen
-import screens.ModalBottomSheetChooseHierarchy
-import screens.task.TaskActivity
 import viewmodel.MainViewModel
-import java.text.SimpleDateFormat
-import java.util.*
 
 @Composable
-fun TManagerApp(viewModel: MainViewModel,cardsViewModel: CardsViewModel) {
-
+fun TManagerApp(viewModel: MainViewModel) {
     Project_AM_ManagerTheme{
-        AppContent(viewModel,cardsViewModel)
+        AppContent(viewModel)
     }
 }
 
-@OptIn(ExperimentalMaterialApi::class, ExperimentalPagerApi::class)
-@Composable
-fun AppContent(viewModel: MainViewModel,cardsViewModel: CardsViewModel){
+@ExperimentalPagerApi
+@OptIn(ExperimentalMaterialApi::class)
+data class DataMain(
+    val scaffoldState: ScaffoldState,
+    val state: ModalBottomSheetState,
+    val scope: CoroutineScope,
+    val currentBoard: MutableState<Long>,
+    val boardParentId: MutableState<Long>,
+    val viewModel: MainViewModel,
+    val pagerState: PagerState,
+    val index_toAnimateGo: MutableState<Int>,
+    val stateModal: ModalBottomSheetState,
+    val openDialogEditing: MutableState<Boolean>,
+    val scale_content: MutableState<Float>,
+    val offset_content: MutableState<Offset>,
+    val isSelected: MutableState<Boolean>,
+    val screenState: MutableState<Screen>,
+    val navController: NavHostController
+)
 
-    val scaffoldState: ScaffoldState = rememberScaffoldState()
-    val state = rememberModalBottomSheetState(ModalBottomSheetValue.Hidden)
-    val scope = rememberCoroutineScope()
-    var currentBoard = remember { mutableStateOf(1L) }
-    val boardParentId =  remember { mutableStateOf(1L) }
+private data class NavigationItem(
+    val index: Int,
+    val vectorResourceId: Int,
+    val contentDescriptionResourceId: Int,
+    val screen: String
+)
+
+@OptIn(ExperimentalMaterialApi::class, ExperimentalPagerApi::class, ExperimentalAnimationApi::class)
+@Composable
+fun AppContent(viewModel: MainViewModel){
+    val data = DataMain(
+        scaffoldState = rememberScaffoldState(),
+        state = rememberModalBottomSheetState(ModalBottomSheetValue.Hidden),
+        scope = rememberCoroutineScope(),
+        currentBoard = remember { mutableStateOf(1L) },
+        boardParentId = remember { mutableStateOf(1L) },
+        viewModel = viewModel,
+        pagerState = rememberPagerState(),
+        index_toAnimateGo = remember {mutableStateOf(1)},
+        stateModal = rememberModalBottomSheetState(ModalBottomSheetValue.Hidden),
+        openDialogEditing = remember { mutableStateOf(false)  },
+        scale_content = remember { mutableStateOf(0.6f) },
+        offset_content = remember { mutableStateOf(Offset.Zero) },
+        isSelected = remember { mutableStateOf(false)},
+        screenState = TManagerRouter.currentScreen,
+        navController = rememberAnimatedNavController()
+    )
+
     val allBoards: List<BoardModel> by viewModel.allBoards.observeAsState(emptyList())
     val allTasks: List<TaskModel> by viewModel.allTasks.observeAsState(emptyList())
-    boardParentId.value = allBoards.filter { it.id == currentBoard.value}.lastOrNull().let { if (it != null) it.parent_id else 1 }
-
-
-    val pagerState = rememberPagerState()
-    val index_toAnimateGo = remember {
-        mutableStateOf(1)
-    }
-    index_toAnimateGo.value =allBoards.filter {a->  (a.parent_id == boardParentId.value && !allTasks.filter{ it.parent_id == a.id } .isNullOrEmpty()) && a.id != boardParentId.value }
-        .indexOf(if (allBoards.filter { it.id == currentBoard.value }.lastOrNull()!=null) allBoards.filter { it.id == currentBoard.value }.lastOrNull() else BoardModel(0,"","",0) )
+    data.boardParentId.value = allBoards.filter { it.id == data.currentBoard.value}.lastOrNull().let { if (it != null) it.parent_id else 1 }
+    data.index_toAnimateGo.value =allBoards.filter {a->  (a.parent_id == data.boardParentId.value && !allTasks.filter{ it.parent_id == a.id } .isNullOrEmpty()) && a.id != data.boardParentId.value }
+        .indexOf(if (allBoards.filter { it.id == data.currentBoard.value }.lastOrNull()!=null) allBoards.filter { it.id == data.currentBoard.value }.lastOrNull() else BoardModel(0,"","",0) )
         .let { if (it == -1) 0 else it }
-
-
-//    val SHD = LocalConfiguration.current.screenHeightDp-165f
-//    var offset  =  remember { mutableStateOf(Offset(0f,SHD)) }
-
-
-//    viewModel.insertBoard(BoardModel(0,"under root 1",    SimpleDateFormat("dd:MM:yyyy hh:mm:ss").format(
-//        Date()
-//    ),1))
-//    viewModel.insertBoard(BoardModel(0,"under root 2",    SimpleDateFormat("dd:MM:yyyy hh:mm:ss").format(
-//        Date()
-//    ),1))
-//    viewModel.insertBoard(BoardModel(0,"under root 3",    SimpleDateFormat("dd:MM:yyyy hh:mm:ss").format(
-//        Date()
-//    ),1))
-
-//        viewModel.insertTask(
-//            TaskModel(0,"sub id=2 task 1","description sub 2",SimpleDateFormat("dd:MM:yyyy hh:mm:ss").format(
-//                Date()), Color.Magenta,2     )
-//        )
-//    viewModel.insertTask(
-//        TaskModel(0,"sub id=2 task 2","description sub 2",SimpleDateFormat("dd:MM:yyyy hh:mm:ss").format(
-//            Date()),Color.Magenta,2     )
-//    )
-//    viewModel.insertTask(
-//        TaskModel(0,"sub id=2 task 3","description sub 2",SimpleDateFormat("dd:MM:yyyy hh:mm:ss").format(
-//            Date()), Color.Magenta,4     )
-//    )
-    // Анимация?!
-    val stateModal = rememberModalBottomSheetState(ModalBottomSheetValue.Hidden)
-
-    val openDialogEditing = remember { mutableStateOf(false)  }
-    var scale_content = remember { mutableStateOf(0.6f) }
-    var offset_content = remember { mutableStateOf(Offset.Zero) }
-
-
-
-
-
-
-    val isSelected = remember {
-        mutableStateOf(false)
-    }
 
 
 
     Crossfade(targetState = TManagerRouter.currentScreen) { screenState: MutableState<Screen> ->
-
+        data.screenState.value = screenState.value
         Scaffold(
-            topBar = {TopAppBar(screenState,state,viewModel,boardParentId,currentBoard, scale_content,offset_content)},
-            bottomBar = { BottomNavigationComponent(screenState) },
-            content = { MainScreenContainer(screenState,viewModel ,boardParentId, currentBoard,pagerState,scale_content,offset_content,stateModal,openDialogEditing,isSelected) },
-            floatingActionButton = {ExtendedFloatingActionButton(screenState)}
-
+            scaffoldState = data.scaffoldState,
+//            topBar = {GetTopAppBar(data)},
+            bottomBar = { GetBottomNavigationComponent(data) },
+//            content = { GetMainScreenContainer(data) },
+            content = {NavigateContainer(data)},
+            floatingActionButton = {MainExtendedFloatingActionButton(data)}
         )
-
     }
-    ModalBottomSheetChoose(state,scope,viewModel,currentBoard,pagerState,index_toAnimateGo)
 
+    ModalBottomSheetChoose(data)
 }
-@OptIn(ExperimentalMaterialApi::class)
+
+@OptIn(ExperimentalPagerApi::class, ExperimentalAnimationApi::class)
 @Composable
-fun ExtendedFloatingActionButton(screenState: MutableState<Screen>){
-    val context = LocalContext.current
-    if (screenState.value == Screen.Home){
-        FloatingActionButton(
-            content = { Icon(imageVector = ImageVector.vectorResource(id = R.drawable.ic_baseline_plus_24), contentDescription = "")},
-            onClick = {
-                      context.startActivity(Intent(context,TaskActivity::class.java))
+fun NavigateContainer(data: DataMain){
+    AnimatedNavHost(data.navController, startDestination = "Home") {
+        composable(
+            "Home",
+            enterTransition = {
+                when (initialState.destination.route) {
+                    "Hierarchy" ->
+                        slideIntoContainer(AnimatedContentScope.SlideDirection.Right, animationSpec = tween(300))
+                    "History" ->
+                        slideIntoContainer(AnimatedContentScope.SlideDirection.Right, animationSpec = tween(300))
+                    else -> null
+                }
             },
-            elevation = FloatingActionButtonDefaults.elevation(8.dp)
-        )
+            exitTransition = {
+                when (targetState.destination.route) {
+                    "Hierarchy" ->
+                        slideOutOfContainer(AnimatedContentScope.SlideDirection.Left, animationSpec = tween(300))
+                    "History" ->
+                        slideOutOfContainer(AnimatedContentScope.SlideDirection.Left, animationSpec = tween(300))
+                    else -> null
+                }
+            },
+        ) {
+            Column() {
+                HomeTopBar(data)
+                HomeScreen(data)
+            }
+
+        }
+        composable(
+            "Hierarchy",
+            enterTransition = {
+                when (initialState.destination.route) {
+                    "Home" ->
+                        slideIntoContainer(AnimatedContentScope.SlideDirection.Left, animationSpec = tween(300))
+                    "History" ->
+                        slideIntoContainer(AnimatedContentScope.SlideDirection.Right, animationSpec = tween(300))
+                    else -> null
+                }
+            },
+            exitTransition = {
+                when (targetState.destination.route) {
+                    "Home" ->
+                        slideOutOfContainer(AnimatedContentScope.SlideDirection.Right, animationSpec = tween(300))
+                    "History" ->
+                        slideOutOfContainer(AnimatedContentScope.SlideDirection.Left, animationSpec = tween(300))
+                    else -> null
+                }
+            },
+        ) {
+            Column() {
+                HierarchyTopBar(data)
+                HierarchyScreen(data)
+            }
+
+        }
+        composable(
+            "History",
+            enterTransition = {
+                when (initialState.destination.route) {
+                    "Home" ->
+                        slideIntoContainer(AnimatedContentScope.SlideDirection.Left, animationSpec = tween(300))
+                    "Hierarchy" ->
+                        slideIntoContainer(AnimatedContentScope.SlideDirection.Left, animationSpec = tween(300))
+                    else -> null
+                }
+            },
+            exitTransition = {
+                when (targetState.destination.route) {
+                    "Home" ->
+                        slideOutOfContainer(AnimatedContentScope.SlideDirection.Right, animationSpec = tween(300))
+                    "Hierarchy" ->
+                        slideOutOfContainer(AnimatedContentScope.SlideDirection.Right, animationSpec = tween(300))
+                    else -> null
+                }
+            },
+        ) {
+            Column {
+                HistoryTopBar()
+                HistoryScreen(data)
+            }
+
+        }
+
 
     }
-
 
 }
 
 
 
+@OptIn(ExperimentalMaterialApi::class, ExperimentalPagerApi::class)
+@Composable
+fun GetTopAppBar(
+    data: DataMain
+){
+    when (data.screenState.value) {
+        Screen.Home ->   HomeTopBar(data)
+        Screen.Hierarchy -> HierarchyTopBar(data)
+        Screen.History -> HistoryTopBar()
+    }
+}
 
 @OptIn(ExperimentalMaterialApi::class, ExperimentalPagerApi::class, ExperimentalComposeUiApi::class)
 @Composable
-fun MainScreenContainer(
-    screenState: MutableState<Screen>,
-    viewModel: MainViewModel,
-    boardParentId: MutableState<Long>,
-    currentBoard: MutableState<Long>,
-    pagerState: PagerState,
-    scale_content: MutableState<Float>,
-    offset_content: MutableState<Offset>,
-    stateModal: ModalBottomSheetState,
-    openDialogEditing: MutableState<Boolean>,
-    isSelected: MutableState<Boolean>
+fun GetMainScreenContainer(
+    data: DataMain
 ) {
-    val requestDisallowInterceptTouchEvent = RequestDisallowInterceptTouchEvent()
-    requestDisallowInterceptTouchEvent.invoke(true)
     Surface(
         color = MaterialTheme.colors.background,
         modifier = Modifier,
-
-
     ) {
-        when (screenState.value) {
-            Screen.Home -> HomeScreen(viewModel,boardParentId,currentBoard,pagerState,isSelected)
-            Screen.Hierarchy -> HierarchyScreen(screenState,viewModel,currentBoard,scale_content,offset_content, stateModal = stateModal,openDialogEditing)
-            Screen.History -> HistoryScreen(viewModel)
-
+        when (data.screenState.value) {
+            Screen.Home -> HomeScreen(data)
+            Screen.Hierarchy -> HierarchyScreen(data)
+            Screen.History -> HistoryScreen(data)
         }
     }
-
 }
 
+@OptIn(ExperimentalPagerApi::class)
 @Composable
-fun BottomNavigationComponent( screenState: MutableState<Screen>) {
+fun GetBottomNavigationComponent(
+    dataMain: DataMain
+) {
     var selectedItem by remember { mutableStateOf(0) }
 
-    val colors = MaterialTheme.colors
-
     val items = listOf(
-        NavigationItem(0,R.drawable.ic_baseline_home_24,R.string.home, Screen.Home),
-        NavigationItem(1,R.drawable.ic_baseline_hierarchy_24,R.string.hierarchy, Screen.Hierarchy),
-        NavigationItem(2,R.drawable.ic_baseline_history_24,R.string.history, Screen.History),
+        NavigationItem(0,R.drawable.ic_baseline_home_24,R.string.home, "Home"),
+        NavigationItem(1,R.drawable.ic_baseline_hierarchy_24,R.string.hierarchy, "Hierarchy"),
+        NavigationItem(2,R.drawable.ic_baseline_history_24,R.string.history, "History"),
     )
     BottomNavigation{
         items.forEach {
@@ -213,222 +272,22 @@ fun BottomNavigationComponent( screenState: MutableState<Screen>) {
                 selected = selectedItem == it.index,
                 onClick = {
                     selectedItem = it.index
-                    screenState.value = it.screen
+//                    dataMain.screenState.value = it.screen
+                    dataMain.navController.navigate(it.screen)
                 },
                 icon = {Icon(imageVector = ImageVector.vectorResource(
                     id = it.vectorResourceId),
-                    contentDescription = stringResource(id = it.contentDescriptionResourceId)
-
-            )}
-            )
-
-        }
-
-    }
-}
-
-private data class NavigationItem(
-    val index: Int,
-    val vectorResourceId: Int,
-    val contentDescriptionResourceId: Int,
-    val screen: Screen
-)
-
-
-@OptIn(ExperimentalMaterialApi::class)
-@Composable
-fun TopAppBar(
-    screenState: MutableState<Screen>,
-    state: ModalBottomSheetState,
-    viewModel: MainViewModel,
-    boardParentId: MutableState<Long>,
-    currentBoard: MutableState<Long>,
-    scale_content: MutableState<Float>,
-    offset_content: MutableState<Offset>,
-){
-    when (screenState.value) {
-
-        Screen.Home ->   HomeTopBar(state,viewModel,boardParentId)
-        Screen.Hierarchy -> HierarchyTopBar(viewModel,currentBoard,scale_content,offset_content)
-        Screen.History -> HistoryTopBar()
-
-    }
-}
-
-
-@Composable
-fun HistoryTopBar() {
-
-}
-
-@Composable
-fun HierarchyTopBar(
-    viewModel: MainViewModel,
-    currentBoard: MutableState<Long>,
-    scale_content: MutableState<Float>,
-    offset_content: MutableState<Offset>
-) {
-    val allBoards: List<BoardModel> by viewModel.allBoards.observeAsState(emptyList())
-    val SHD = LocalConfiguration.current.screenHeightDp-165f
-    Row(modifier = Modifier
-        .fillMaxWidth()
-        .padding(horizontal = 20.dp),
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        Text(text = allBoards.filter { it.id ==  currentBoard.value}.lastOrNull()?.name.orEmpty())
-        IconButton(onClick = {
-                scale_content.value = 0.6f
-                offset_content.value = Offset(0f,0f)
-
-
-        }) {
-            Icon(imageVector = ImageVector.vectorResource(id = R.drawable.ic_baseline_hierarchy_24), contentDescription ="" )
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterialApi::class)
-@Composable
-fun HomeTopBar(state: ModalBottomSheetState,viewModel: MainViewModel,currentBoard: MutableState<Long>) {
-    val scope = rememberCoroutineScope()
-    val allBoards: List<BoardModel> by viewModel.allBoards.observeAsState(emptyList())
-    // Текущая выбранная доска
-    // Вывести все доски, где тасок больше 0
-
-    Row(modifier = Modifier
-        .fillMaxWidth()
-        .padding(horizontal = 20.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-        Row(modifier = Modifier.clickable {
-            if (state.isVisible){
-                scope.launch { state.hide() }
-            }else{
-                scope.launch { state.show() }
-            }
-        }){
-            Text(text = allBoards.filter { it.id==currentBoard.value }.firstOrNull().let { if (it != null) it.name else "" })
-            Icon(imageVector = ImageVector.vectorResource(id = R.drawable.ic_baseline_down_24), contentDescription = "", modifier = Modifier.padding(
-                PaddingValues(start = 10.dp)))
-        }
-        Row() {
-            var expanded by remember { mutableStateOf(false) }
-            val items = listOf("A", "B", "C", "D", "E", "F")
-            var selectedIndex by remember { mutableStateOf(0) }
-
-            Icon(imageVector = ImageVector.vectorResource(id = R.drawable.ic_baseline_search_24), contentDescription = "",
-                modifier = Modifier.padding(PaddingValues(end = 20.dp)))
-//            Icon(imageVector = ImageVector.vectorResource(id = R.drawable.ic_baseline_more_24), contentDescription = "",
-//                modifier=Modifier.clickable(onClick = { expanded = true }))
-            DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false  },modifier = Modifier
-                ) {
-                        items.forEachIndexed { index, s ->
-                            DropdownMenuItem(onClick = {
-                                selectedIndex = index
-                                expanded = false
-                            }){
-                                Text(text = s + " =sSs")
+                    contentDescription = stringResource(id = it.contentDescriptionResourceId),
+                    tint = Color.Black,
+                    modifier = Modifier
+                        .drawBehind {
+                            if (selectedItem == it.index){
+                                drawRoundRect(Color.Magenta, Offset(-size.width,-size.height*0.4f/2), Size(size.width*3f,size.height*1.4f),
+                                    cornerRadius = CornerRadius(50f,50f), alpha = 0.1f)
                             }
                         }
-            }
-        }
-
-
-    }
-
-}
-
-@Composable
-fun DropdownDemo() {
-    var expanded by remember { mutableStateOf(false) }
-    val items = listOf("A", "B", "C", "D", "E", "F")
-    val disabledValue = "B"
-    var selectedIndex by remember { mutableStateOf(0) }
-    Box(modifier = Modifier
-        .fillMaxSize()
-        .wrapContentSize(Alignment.TopStart)) {
-        Text(items[selectedIndex],modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = { expanded = true })
-            .background(
-                Color.Gray
-            ))
-        DropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false },
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(
-                    Color.Red
-                )
-        ) {
-            items.forEachIndexed { index, s ->
-                DropdownMenuItem(onClick = {
-                    selectedIndex = index
-                    expanded = false
-                }) {
-                    val disabledText = if (s == disabledValue) {
-                        " (Disabled)"
-                    } else {
-                        ""
-                    }
-                    Text(text = s + disabledText)
-                }
-            }
+                )}
+            )
         }
     }
 }
-
-
-
-@OptIn(ExperimentalMaterialApi::class, ExperimentalPagerApi::class)
-@Composable
-fun ModalBottomSheetChoose(
-    state: ModalBottomSheetState,
-    scope: CoroutineScope,
-    viewModel: MainViewModel,
-    currentBoard: MutableState<Long>,
-    pagerState: PagerState,
-    index_toAnimateGo:MutableState<Int>
-) {
-
-    ModalBottomSheetLayout(
-        sheetState = state,
-        sheetContent = {
-
-            BoardsScreen(index_toAnimateGo,pagerState,state = state,viewModel = viewModel, isAll = false,currentBoard=currentBoard)
-        }
-    ) {
-
-        
-    }
-
-
-}
-
-
-//@OptIn(ExperimentalMaterialApi::class)
-//@Composable
-//fun ModalBottomSheetChooseAllBoards(state: ModalBottomSheetState,scope: CoroutineScope,viewModel: MainViewModel) {
-//
-//    ModalBottomSheetLayout(
-//        sheetState = state,
-//        sheetContent = {
-//
-//            BoardsScreen(viewModel,true)
-//        }
-//    ) {
-//
-//
-//    }
-//
-//
-//}
-
-
-
-
-
-
-
-
-
-

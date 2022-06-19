@@ -55,9 +55,13 @@ internal fun KalendarHeader(
     kalendarSelector: KalendarSelector,
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(Color.Black)
+            ,
         horizontalArrangement = Arrangement.SpaceEvenly,
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
+
     ) {
         KalendarButton(
             kalendarSelector = kalendarSelector,
@@ -71,6 +75,7 @@ internal fun KalendarHeader(
             style = MaterialTheme.typography.h6,
             text = text,
             textAlign = TextAlign.Center,
+            color=Color.White
         )
         KalendarButton(
             imageVector = Icons.Default.ArrowForward,
@@ -93,14 +98,15 @@ private fun KalendarButton(
         modifier = Modifier
             .size(Grid.Three)
             .clip(CircleShape)
-            .background(Color.Black)
+            .background(Color.White)
     ) {
         Icon(
             modifier = Modifier
                 .padding(Grid.Half)
                 .alpha(1F),
             imageVector = imageVector,
-            contentDescription = contentDescription
+            contentDescription = contentDescription,
+            tint = Color.Black
         )
     }
 }

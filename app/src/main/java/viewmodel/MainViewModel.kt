@@ -19,33 +19,6 @@ class MainViewModel(private val repositoryTask: RepositoryTask,private val repos
 
 
     // Добавить, Удалить, Редактирвовать, Поиск, Получить по id, Получить все
-    val allTasks by lazy { repositoryTask.getAll() }
-
-
-    fun getTask(id: Long): LiveData<TaskModel> {
-        return MutableLiveData<TaskModel>(allTasks.value?.filter { it.id==id }?.last())
-    }
-
-    fun deleteTask(task: TaskModel){
-        viewModelScope.launch{
-            repositoryTask.delete(task)
-        }
-    }
-
-    fun insertTask(task: TaskModel){
-        viewModelScope.launch{
-            repositoryTask.insert(task)
-        }
-    }
-
-    fun updateTask(task: TaskModel){
-        viewModelScope.launch{
-            repositoryTask.update(task)
-        }
-    }
-
-
-    // Добавить, Удалить, Редактирвовать, Поиск, Получить по id, Получить все
     val allBoards by lazy { repositoryBoard.getAll()   }
 
 
@@ -73,6 +46,35 @@ class MainViewModel(private val repositoryTask: RepositoryTask,private val repos
 
 
 
+    // Добавить, Удалить, Редактирвовать, Поиск, Получить по id, Получить все
+    val allTasks by lazy { repositoryTask.getAll() }
+
+
+    fun getTask(id: Long): LiveData<TaskModel> {
+        return MutableLiveData<TaskModel>(allTasks.value?.filter { it.id==id }?.last())
+    }
+
+    fun deleteTask(task: TaskModel){
+        viewModelScope.launch{
+            repositoryTask.delete(task)
+        }
+    }
+
+    fun insertTask(task: TaskModel){
+        viewModelScope.launch{
+            repositoryTask.insert(task)
+        }
+    }
+
+    fun updateTask(task: TaskModel){
+        viewModelScope.launch{
+            repositoryTask.update(task)
+        }
+    }
+
+
+
+
 
 
 
@@ -86,6 +88,23 @@ class MainViewModel(private val repositoryTask: RepositoryTask,private val repos
             if (list.contains(boardId)) list.remove(boardId) else list.add(boardId)
         }
     }
+
+
+    ////////////////////////////////////
+    // View Saveable
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 }

@@ -50,7 +50,7 @@ internal fun KalendarView(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(Grid.Half)
+//            .padding(Grid.Half)
     ) {
         KalendarMonth(
             viewModel,

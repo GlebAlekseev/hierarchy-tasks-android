@@ -69,6 +69,6 @@ internal fun KalendarWeekDay(
         modifier = modifier,
         contentAlignment = Alignment.Center
     ) {
-        Text(text = text, modifier = Modifier.alpha(0.5F), style = MaterialTheme.typography.body1)
+        Text(text = text, modifier = Modifier.alpha(0.7F), style = MaterialTheme.typography.body1)
     }
 }

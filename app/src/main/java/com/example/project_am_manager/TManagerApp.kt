@@ -77,7 +77,8 @@ data class DataMain(
     val offset_content: MutableState<Offset>,
     val isSelected: MutableState<Boolean>,
     val screenState: MutableState<Screen>,
-    val navController: NavHostController
+    val navController: NavHostController,
+    var selectedItem: MutableState<Int>
 )
 
 private data class NavigationItem(
@@ -90,6 +91,7 @@ private data class NavigationItem(
 @OptIn(ExperimentalMaterialApi::class, ExperimentalPagerApi::class, ExperimentalAnimationApi::class)
 @Composable
 fun AppContent(viewModel: MainViewModel){
+
     val data = DataMain(
         scaffoldState = rememberScaffoldState(),
         state = rememberModalBottomSheetState(ModalBottomSheetValue.Hidden),
@@ -101,21 +103,22 @@ fun AppContent(viewModel: MainViewModel){
         index_toAnimateGo = remember {mutableStateOf(1)},
         stateModal = rememberModalBottomSheetState(ModalBottomSheetValue.Hidden),
         openDialogEditing = remember { mutableStateOf(false)  },
-        scale_content = remember { mutableStateOf(0.6f) },
-        offset_content = remember { mutableStateOf(Offset.Zero) },
+        scale_content = remember { mutableStateOf(0.4f) },
+        offset_content = remember { mutableStateOf(Offset(0f,0f)) },
         isSelected = remember { mutableStateOf(false)},
         screenState = TManagerRouter.currentScreen,
-        navController = rememberAnimatedNavController()
+        navController = rememberAnimatedNavController(),
+        selectedItem = remember { mutableStateOf(0) }
     )
 
     val allBoards: List<BoardModel> by viewModel.allBoards.observeAsState(emptyList())
     val allTasks: List<TaskModel> by viewModel.allTasks.observeAsState(emptyList())
     data.boardParentId.value = allBoards.filter { it.id == data.currentBoard.value}.lastOrNull().let { if (it != null) it.parent_id else 1 }
-    data.index_toAnimateGo.value =allBoards.filter {a->  (a.parent_id == data.boardParentId.value && !allTasks.filter{ it.parent_id == a.id } .isNullOrEmpty()) && a.id != data.boardParentId.value }
+
+    data.index_toAnimateGo.value = allBoards.filter {a->  (a.parent_id == data.boardParentId.value && !allTasks.filter{ it.parent_id == a.id } .isNullOrEmpty()) }
         .indexOf(if (allBoards.filter { it.id == data.currentBoard.value }.lastOrNull()!=null) allBoards.filter { it.id == data.currentBoard.value }.lastOrNull() else BoardModel(0,"","",0) )
         .let { if (it == -1) 0 else it }
-
-
+    println("##$$ data.index_toAnimateGo.value=${data.index_toAnimateGo.value}")
 
     Crossfade(targetState = TManagerRouter.currentScreen) { screenState: MutableState<Screen> ->
         data.screenState.value = screenState.value
@@ -157,10 +160,12 @@ fun NavigateContainer(data: DataMain){
                 }
             },
         ) {
+            data.screenState.value = Screen.Home
             Column() {
                 HomeTopBar(data)
                 HomeScreen(data)
             }
+
 
         }
         composable(
@@ -184,6 +189,7 @@ fun NavigateContainer(data: DataMain){
                 }
             },
         ) {
+            data.screenState.value = Screen.Hierarchy
             Column() {
                 HierarchyTopBar(data)
                 HierarchyScreen(data)
@@ -211,6 +217,7 @@ fun NavigateContainer(data: DataMain){
                 }
             },
         ) {
+            data.screenState.value = Screen.History
             Column {
                 HistoryTopBar()
                 HistoryScreen(data)
@@ -259,7 +266,7 @@ fun GetMainScreenContainer(
 fun GetBottomNavigationComponent(
     dataMain: DataMain
 ) {
-    var selectedItem by remember { mutableStateOf(0) }
+
 
     val items = listOf(
         NavigationItem(0,R.drawable.ic_baseline_home_24,R.string.home, "Home"),
@@ -269,9 +276,9 @@ fun GetBottomNavigationComponent(
     BottomNavigation{
         items.forEach {
             BottomNavigationItem(
-                selected = selectedItem == it.index,
+                selected = dataMain.selectedItem.value == it.index,
                 onClick = {
-                    selectedItem = it.index
+                    dataMain.selectedItem.value = it.index
 //                    dataMain.screenState.value = it.screen
                     dataMain.navController.navigate(it.screen)
                 },
@@ -281,9 +288,9 @@ fun GetBottomNavigationComponent(
                     tint = Color.Black,
                     modifier = Modifier
                         .drawBehind {
-                            if (selectedItem == it.index){
-                                drawRoundRect(Color.Magenta, Offset(-size.width,-size.height*0.4f/2), Size(size.width*3f,size.height*1.4f),
-                                    cornerRadius = CornerRadius(50f,50f), alpha = 0.1f)
+                            if (dataMain.selectedItem.value == it.index){
+                                drawRoundRect(Color(android.graphics.Color.parseColor("#F0F0F0")), Offset(-size.width,-size.height*0.4f/2), Size(size.width*3f,size.height*1.4f),
+                                    cornerRadius = CornerRadius(50f,50f))
                             }
                         }
                 )}

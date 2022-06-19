@@ -19,8 +19,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -274,30 +276,43 @@ fun ExpandableContent(
         enter = enterExpand + enterFadeIn,
         exit = exitCollapse + exitFadeOut
     ) {
-        Column(modifier = Modifier.padding(8.dp).fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+        Column(modifier = Modifier
+            .padding(8.dp)
+            .fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
             allBoards.filter {a-> a.parent_id == board.id  &&
-                    if (editInputs != null) {!allTasks.filter { a.id == it.parent_id  }.isNullOrEmpty()}else true}.forEach{
+                    if (dataMain != null) {!allTasks.filter { a.id == it.parent_id  }.isNullOrEmpty()}else true}.forEach{
 
                 Box(modifier = Modifier
                     .clickable {
-                    if  (dataMain != null) dataMain.currentBoard.value = it.id
-                    scope.launch {
-                        if (dataMain != null){
-                            dataMain.state.hide()
-                            if (dataMain.index_toAnimateGo.value != -1){
-                                dataMain.pagerState.animateScrollToPage(dataMain.index_toAnimateGo.value)
+                        if (editInputs != null) editInputs.parentBoardState.value = it.id
+                        scope.launch {
+                            if (dataMain != null) {
+                                dataMain.state.hide()
+                                dataMain.currentBoard.value = it.id
+                                dataMain.boardParentId.value = it.parent_id
+
+                                if (dataMain.index_toAnimateGo.value != -1) {
+                                    println("##*** dataMain.index_toAnimateGo.value=${dataMain.index_toAnimateGo.value}")
+                                    dataMain.pagerState.animateScrollToPage(dataMain.index_toAnimateGo.value)
+                                    dataMain.pagerState.animateScrollToPage(dataMain.index_toAnimateGo.value)
+                                }
+                            } else if (editInputs != null) {
+                                editInputs.stateModal.hide()
                             }
-                        }else if(editInputs != null){
-                            editInputs.stateModal.hide()
                         }
                     }
-                }
                     .padding(5.dp)
-                    .border(BorderStroke(3.dp, Color.Black),shape)
-
+                    .border(BorderStroke(3.dp, Color.Black), shape)
+                    .fillMaxWidth()
                     .padding(10.dp)
                 ){
-                    Text(text = it.name, modifier = Modifier)
+                    Row() {
+                        Icon(imageVector = ImageVector.vectorResource(id = R.drawable.ic_baseline_bookmark_24), contentDescription = "",
+                        modifier = Modifier
+                            .padding(horizontal = 16.dp))
+                        Text(text = it.name, modifier = Modifier, fontWeight = FontWeight.W400)
+                    }
+
                 }
 
             }

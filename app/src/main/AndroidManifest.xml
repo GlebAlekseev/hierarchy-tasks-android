@@ -17,6 +17,7 @@
 <!--        {com.example.project_am_manager/com.example.project_am_manager.TaskActivity};-->
         <activity
             android:name=".TaskActivity"
+            android:windowSoftInputMode="adjustResize"
             android:exported="true" />
         <activity
             android:name=".MainActivity"

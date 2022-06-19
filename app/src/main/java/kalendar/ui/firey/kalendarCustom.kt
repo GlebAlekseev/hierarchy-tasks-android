@@ -58,7 +58,7 @@ internal fun KalendarFirey(
 //                .background(color)
 //                .padding(Grid.OneHalf),
                     ,
-            shape = kalendarStyle.shape,
+//            shape = kalendarStyle.shape,
             elevation = kalendarStyle.elevation,
             backgroundColor = calendarBackgroundColor,
         ) {

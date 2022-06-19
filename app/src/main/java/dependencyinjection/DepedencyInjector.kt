@@ -13,9 +13,9 @@ import data.repository.RepositoryTask
 import data.repository.RepositoryTaskImpl
 
 class DependencyInjector(applicationContext: Context) {
-
-    val repositoryTask: RepositoryTask by lazy { provideRepositoryTask(database) }
     val repositoryBoard: RepositoryBoard by lazy { provideRepositoryBoard(database) }
+    val repositoryTask: RepositoryTask by lazy { provideRepositoryTask(database) }
+
 
     private val database: AppDatabase by lazy { provideDatabase(applicationContext) }
     private val dbMapperBoard: DbMapperBoard = DbMapperBoardImpl()

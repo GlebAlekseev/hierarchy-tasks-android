@@ -14,67 +14,56 @@ import com.example.project_am_manager.TaskActivity
 @Composable
 fun AlertDialogSave(openDialog: MutableState<Boolean>, editInputs: EditInputs, id:Long) {
     val context = LocalContext.current as TaskActivity
-//    val allTasks: List<TaskModel> by editInputs.viewModel.allTasks.observeAsState(emptyList())
+    if (openDialog.value) {
 
-            if (openDialog.value) {
-
-                AlertDialog(
-                    onDismissRequest = {
-                        // Dismiss the dialog when the user clicks outside the dialog or on the back
-                        // button. If you want to disable that functionality, simply use an empty
-                        // onCloseRequest.
+        AlertDialog(
+            onDismissRequest = {
+                openDialog.value = false
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
                         openDialog.value = false
-                    },
-//                    title = {
-//                        Text(text = if (id == 0L) "Добавление" else "Редактирование")
-//                    },
-//                    text = {
-//                        Text("Here is a text ")
-//                    },
-                    confirmButton = {
-                        Button(
 
-                            onClick = {
-                                openDialog.value = false
-
-                                if (id == 0L) {
-                                    editInputs.viewModel.insertTask(TaskModel(
-                                        0,
-                                        editInputs.nameState.value.text,
-                                        editInputs.descriptionState.value.text,
-                                        editInputs.currentDate,
-                                        Color.DarkGray,
-                                        editInputs.parentBoardState.value
-                                    ))
-                                }else{
-                                    editInputs.viewModel.updateTask(TaskModel(
-                                        id,
-                                        editInputs.nameState.value.text,
-                                        editInputs.descriptionState.value.text,
-                                        editInputs.currentDate,
-                                        Color.DarkGray,
-                                        editInputs.parentBoardState.value
-                                    ))
-                                }
-                                context.finish()
-                            }) {
-                            Text(if (id == 0L) "Добавить" else "Сохранить")
+                        if (id == 0L) {
+                            val model = TaskModel(
+                                0,
+                                editInputs.nameState.value.text,
+                                editInputs.descriptionState.value.text,
+                                editInputs.currentDate,
+                                Color.DarkGray,
+                                editInputs.parentBoardState.value
+                            )
+                            println("MODEL_INSERT=$model")
+                            editInputs.viewModel.insertTask(model)
+                        } else {
+                            val model = TaskModel(
+                                id,
+                                editInputs.nameState.value.text,
+                                editInputs.descriptionState.value.text,
+                                editInputs.currentDate,
+                                Color.DarkGray,
+                                editInputs.parentBoardState.value
+                            )
+                            println("MODEL_UPDATE=$model")
+                            editInputs.viewModel.updateTask(model)
                         }
-                    },
-                    dismissButton = {
-                        Button(
+                        context.finish()
+                    }) {
+                    Text(if (id == 0L) "Добавить" else "Сохранить")
+                }
+            },
+            dismissButton = {
+                Button(
 
-                            onClick = {
-                                openDialog.value = false
-                                context.finish()
+                    onClick = {
+                        openDialog.value = false
+                        context.finish()
 
-                            }) {
-                            Text("Игнорировать")
-                        }
-                    }
-                )
+                    }) {
+                    Text("Игнорировать")
+                }
             }
-
-
-
+        )
+    }
 }

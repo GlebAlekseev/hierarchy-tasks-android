@@ -28,9 +28,9 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 @Composable
-fun TaskApp(viewModel: MainViewModel,id:Long) {
+fun TaskApp(viewModel: MainViewModel,id:Long,idCurrentBoard:Long) {
     Project_AM_ManagerTheme{
-        AppContent(viewModel,id)
+        AppContent(viewModel,id,idCurrentBoard)
     }
 }
 
@@ -43,19 +43,20 @@ data class EditInputs(
     val nameState: MutableState<TextFieldValue>,
     var currentDate: String,
     val descriptionState: MutableState<TextFieldValue>,
-    var parentBoardState: MutableState<Long>
+    var parentBoardState: MutableState<Long>,
+    var idCurrentBoard: Long
 )
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun AppContent(viewModel: MainViewModel,id:Long){
+fun AppContent(viewModel: MainViewModel,id:Long,idCurrentBoard: Long){
     val stateModal = rememberModalBottomSheetState(ModalBottomSheetValue.Hidden)
     val scaffoldState: ScaffoldState = rememberScaffoldState()
     val scope = rememberCoroutineScope()
     val nameState = remember { mutableStateOf(TextFieldValue()) }
     var currentDate: String = SimpleDateFormat("dd:MM:yyyy hh:mm:ss").format(Date())
     val descriptionState = remember { mutableStateOf(TextFieldValue()) }
-    val parentBoardState = remember { mutableStateOf(0L) }
+    val parentBoardState = remember { mutableStateOf(idCurrentBoard) }
 
     if (id != 0L){
         val allTasks: List<TaskModel> by viewModel.allTasks.observeAsState(emptyList())
@@ -65,7 +66,7 @@ fun AppContent(viewModel: MainViewModel,id:Long){
         parentBoardState.value =  allTasks.filter { it.id == id }.firstOrNull().let { if (it != null) it.parent_id else  0}
     }
 
-    val editInputs = EditInputs(viewModel,stateModal,scope,scaffoldState,nameState,currentDate,descriptionState,parentBoardState)
+    val editInputs = EditInputs(viewModel,stateModal,scope,scaffoldState,nameState,currentDate,descriptionState,parentBoardState,idCurrentBoard)
 
 
     Crossfade(targetState = TaskRouter.currentScreen) { screenState: MutableState<ScreenTask> ->

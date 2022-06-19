@@ -9,6 +9,7 @@ import androidx.compose.material.BadgedBox
 import androidx.compose.material.Text
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -44,8 +45,8 @@ internal fun KalendarMonth(
 ) {
     Column(
         modifier = Modifier
-            .fillMaxWidth()
-            .padding(4.dp),
+            .fillMaxWidth(),
+//            .padding(4.dp),
         verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
         val haptic = LocalHapticFeedback.current
@@ -86,10 +87,12 @@ internal fun KalendarMonth(
         val days: List<LocalDate> = getDays(monthState)
         val allTasks: List<TaskModel> by viewModel.allTasks.observeAsState(emptyList())
 
-        days.chunked(DAYS_IN_WEEK).forEach { weekDays ->
+        days.chunked(DAYS_IN_WEEK).forEachIndexed{ index,weekDays ->
             BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
                 val size = (maxWidth / DAYS_IN_WEEK)
-                Row(horizontalArrangement = Arrangement.spacedBy(0.dp)) {
+//                Row(horizontalArrangement = Arrangement.spacedBy(0.dp)) {
+                Row(horizontalArrangement = Arrangement.End, modifier = Modifier
+                    .align(if (index == 0) Alignment.CenterEnd else Alignment.CenterStart)) {
                     weekDays.forEach { localDate ->
                         val isFromCurrentMonth = YearMonth.from(localDate) == monthState.value
                         if (isFromCurrentMonth) {
@@ -108,8 +111,8 @@ internal fun KalendarMonth(
                                 .offset(-20.dp,10.dp)
 //                                .background(Color.White),
                                     ,
-                                backgroundColor = Color.LightGray,
-                                contentColor = Color.Red
+                                backgroundColor = Color.Black,
+                                contentColor = Color.White
 
                             ){
 

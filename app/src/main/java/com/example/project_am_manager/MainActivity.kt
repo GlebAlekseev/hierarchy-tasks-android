@@ -11,8 +11,9 @@ class MainActivity : ComponentActivity() {
     private val viewModel: MainViewModel by viewModels(factoryProducer = {
         MainViewModelFactory(
             this,
-            (application as TManagerApplication).dependencyInjector.repositoryTask,
-            (application as TManagerApplication).dependencyInjector.repositoryBoard
+            (application as TManagerApplication).dependencyInjector.repositoryBoard,
+            (application as TManagerApplication).dependencyInjector.repositoryTask
+
         )
     })
 
@@ -25,6 +26,7 @@ class MainActivity : ComponentActivity() {
 
     companion object{
         const val TRANSMITTED_ID = "transmitted_id"
+        const val CURRENT_BOARD = "current_board"
     }
 }
 

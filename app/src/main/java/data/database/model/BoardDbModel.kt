@@ -31,7 +31,14 @@ data class BoardDbModel(
         val ROOT_BOARD =
             BoardDbModel(
                 1,
-                "root",
+                "Главная доска",
+                SimpleDateFormat("dd:MM:yyyy hh:mm:ss").format(Date()),
+                1
+            )
+        val HELPER_BOARD =
+            BoardDbModel(
+                2,
+                "Доска 1",
                 SimpleDateFormat("dd:MM:yyyy hh:mm:ss").format(Date()),
                 1
             )

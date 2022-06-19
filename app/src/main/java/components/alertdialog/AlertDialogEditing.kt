@@ -43,24 +43,9 @@ fun AlertDialogEditing(
                 Column() {
                     Text("Название")
                     TextField(value = nameBoardState.value, onValueChange = {nameBoardState.value = it})
-                    Text(text = allBoards.filter { it.id == currentBoard.value }.firstOrNull()?.name.orEmpty(), modifier = Modifier.clickable{
-                        // Вызов выбора currentBoard
-                        if (stateModal.isVisible){
-                            scopeOther.launch {
-                                openDialog.value = true
-                                stateModal.hide()
-
-                            }
-                        }else{
-                            scopeOther.launch {
-                                openDialog.value = false
-                                stateModal.show()
-
-                            }
-                        }
-
-
-                    })
+                    println("$$$$$$$$$$$$$$$$$${board?.name}")
+                    Text(text = allBoards.filter { it.id == currentBoard.value }.firstOrNull()?.name.orEmpty(),
+                        )
                 }
 
 
@@ -69,13 +54,13 @@ fun AlertDialogEditing(
                 Button(
 
                     onClick = {
-                        if(board.let { if (it != null) it.id else 1L } != 1L ){
+//                        if(board.let { if (it != null) it.id else 1L } != 1L ){
                             viewModel.updateBoard(
-                                BoardModel(board.let { if (it != null) it.id else 0L },nameBoardState.value.text, SimpleDateFormat("dd:MM:yyyy hh:mm:ss").format(
+                                BoardModel(currentBoard.value,nameBoardState.value.text, SimpleDateFormat("dd:MM:yyyy hh:mm:ss").format(
                                 Date()
-                            ),allBoards.filter { it.id == currentBoard.value }.firstOrNull().let { if (it != null) it.id else 0L })
+                            ),allBoards.filter { it.id == currentBoard.value }.firstOrNull().let { if (it != null) it.parent_id else 1L })
                             )
-                        }
+//                        }
                         openDialog.value = false
 
                     }) {

@@ -37,12 +37,13 @@ fun HistoryScreen(
 //    BackButtonAction {
 //        TManagerRouter.goBack()
 //    }
-    LazyColumnDemo(dataMain.viewModel)
+    LazyColumnDemo(dataMain)
 }
 
+@OptIn(ExperimentalPagerApi::class)
 @Composable
-fun LazyColumnDemo(viewModel: MainViewModel) {
-    val allTasks: List<TaskModel> by viewModel.allTasks.observeAsState(emptyList())
+fun LazyColumnDemo(dataMain: DataMain) {
+    val allTasks: List<TaskModel> by dataMain.viewModel.allTasks.observeAsState(emptyList())
     val formatter = SimpleDateFormat("dd:MM:yyyy hh:mm:ss", Locale.US)
     val currentDate: MutableState<String> = remember {
         mutableStateOf(SimpleDateFormat("yyyy-MM-dd").format(Date()))
@@ -55,13 +56,22 @@ fun LazyColumnDemo(viewModel: MainViewModel) {
         itemsIndexed(zeroTaskModel +allTasks.filter {
             currentDate.value == SimpleDateFormat("yyyy-MM-dd").format(formatter.parse(it.date)) }, itemContent = { index, item ->
             if (index == 0){
-                Kalendar(viewModel=viewModel,kalendarType = KalendarType.Firey(), onCurrentDayClick = { day, event ->
+                Kalendar(viewModel=dataMain.viewModel,kalendarType = KalendarType.Firey(), onCurrentDayClick = { day, event ->
                     currentDate.value = day.toString()
                 }, errorMessage = {
 
                 })
-            }else{
-                ToastContent(viewModel,item)
+                Spacer(modifier = Modifier
+                    .fillMaxWidth()
+                    .height(10.dp))
+            }
+            else{
+                ToastContent(dataMain,item)
+                if (index == allTasks.filter {currentDate.value == SimpleDateFormat("yyyy-MM-dd").format(formatter.parse(it.date)) }.size){
+                    Spacer(modifier = Modifier
+                        .fillMaxWidth()
+                        .height(60.dp))
+                }
             }
         })
     }

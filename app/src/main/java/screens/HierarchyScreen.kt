@@ -91,7 +91,7 @@ fun TransformableSample(
     val state_scroll_vertical = rememberScrollState()
 
     val state = rememberTransformableState { zoomChange, offsetChange, rotationChange ->
-        if (dataMain.scale_content.value*zoomChange >= 0.33){
+        if (dataMain.scale_content.value*zoomChange >= 0.1){
             dataMain.scale_content.value *= zoomChange
             dataMain.offset_content.value += offsetChange
         }
@@ -100,6 +100,7 @@ fun TransformableSample(
     Box(
         Modifier
             .fillMaxSize()
+
             .horizontalScroll(state_scroll_horizontal)
             .verticalScroll(state_scroll_vertical)
             .background(Color.White)
@@ -114,27 +115,23 @@ fun TransformableSample(
             .graphicsLayer(
                 scaleX = dataMain.scale_content.value,
                 scaleY = dataMain.scale_content.value,
-            )
+            ), contentAlignment = Alignment.CenterStart
     ){
-        Box(modifier= Modifier
-            .fillMaxSize()
 
-        ) {
 
             val screenHierarchyState: MutableState<Screen> = remember {
                 mutableStateOf(Screen.Hierarchy)
             }
-
             Column(modifier = Modifier
-                .align(Alignment.Center)
-                .background(Color.White)) {
+//                .align(Alignment.CenterStart)
+                .background(Color.White), horizontalAlignment = Alignment.Start) {
                 when(screenHierarchyState.value){
                     Screen.Hierarchy2 -> BuildingHierarchy(dataMain, screenHierarchyState)
                     Screen.Hierarchy -> BuildingHierarchy(dataMain, screenHierarchyState)
                     else -> {}
                 }
             }
-        }
+
     }
 }
 
@@ -147,9 +144,7 @@ fun BuildingHierarchy(
 ){
     val allBoards: List<BoardModel> by dataMain.viewModel.allBoards.observeAsState(emptyList())
 
-
         Row() {
-            println("RECREATE")
             val listOffsetsBoards: MutableList<boardBlock> = remember {
                 mutableListOf()
             }
@@ -163,7 +158,6 @@ fun BuildingHierarchy(
             Column(modifier = Modifier.align(Alignment.CenterVertically)) {
 
                 ColumnZ(allBoards.filter { it.id == it.parent_id }.firstOrNull().let { if (it != null) it.id else 0L } ,dataMain.viewModel,dataMain.currentBoard,listOffsetsBoards,dataMain.stateModal,screenHierarchyState,dataMain.openDialogEditing)
-
             }
         }
 
@@ -205,7 +199,6 @@ fun ColumnZ(
             }
             .drawBehind {
 
-                println("index=$index drawBehind size.height=${size.height}")
                 if (allBoards.filter { it.parent_id == idBoard && it.id != it.parent_id }.size == 1) {
 
                 } else if (index == 0) {
@@ -239,6 +232,7 @@ fun ColumnZ(
             Column(modifier = Modifier
                 .align(Alignment.CenterVertically)
 ) {
+
                 Board(viewModel,it,currentBoard,listOffsetsBoards,stateModal,screenHierarchyState,openDialogEditing)
             }
             Column(modifier = Modifier.align(Alignment.CenterVertically)
@@ -294,36 +288,7 @@ fun Board(
     AlertDialogEditing(openDialog = openDialogEditing, nameBoardState = nameBoardStateEditing, viewModel = viewModel,board,currentBoard,stateModal,scope)
 
 
-    var expanded by remember { mutableStateOf(false) }
-    DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false  },modifier = Modifier
-    ) {
 
-            DropdownMenuItem(onClick = {
-                expanded = false
-                openDialogAdding.value = true
-
-            }){
-                Text("Добавить")
-            }
-        DropdownMenuItem(onClick = {
-            expanded = false
-            openDialogEditing.value = true
-        }){
-            Text(text = "Редактировать")
-        }
-        if (board.let { if(it!=null) it.id else 1L} != 1L){
-            DropdownMenuItem(onClick = {
-                if (allBoards.filter { it.id == board?.id }.first().let { if(it != null) it.id else 1L } != 1L){
-                    viewModel.deleteBoard(allBoards.filter { it.id == board?.id }.first())
-                }
-                expanded = false
-            }){
-                Text(text = "Удалить")
-            }
-        }
-
-
-    }
     val requestDisallowInterceptTouchEvent = RequestDisallowInterceptTouchEvent()
     requestDisallowInterceptTouchEvent.invoke(true)
 
@@ -344,7 +309,7 @@ fun Board(
 //    val intersectId = remember {
 //        mutableStateOf(0L)
 //    }
-
+    var expanded by remember { mutableStateOf(false) }
 
 Column (modifier= Modifier
 
@@ -411,7 +376,7 @@ Column (modifier= Modifier
                             ).contains(board.let { if (it != null) it.id else 0L })
                         // Если it имеет parent - board, то нет
                         ) {
-                            println("ПЕРЕСЕКАЮТСЯ id ( ${board?.id} и ${it.board?.id}) __ it.off=${it.offset.value} off=${offset_global.value}")
+
                             // Вызвать эффект
                             // Обработать если отпущено
 
@@ -422,29 +387,29 @@ Column (modifier= Modifier
 
 
                         } else {
-                            println("**${listOffsetsBoards.filter { a -> a.selected.value == true && it.board != a.board }.size} and ${it.size} and ${it.board?.name}")
+//                            println("**${listOffsetsBoards.filter { a -> a.selected.value == true && it.board != a.board }.size} and ${it.size} and ${it.board?.name}")
 //                            intersectId.value = 0L
                             it.selected.value = false
                         }
                     }
                 }
-                println("ONDRAG=${offset}")
+//                println("ONDRAG=${offset}")
 
             },
             onDragEnd = {
-                println("END")
+//                println("END")
                 // Переместить с заменой parent
-                println(listOffsetsBoards.toString())
+//                println(listOffsetsBoards.toString())
 
                 if (listOffsetsBoards.filter { it.selected.value == true }.size >= 1) {
                     // Доска не может быть перемещена к своим детям
-                    println(
-                        "${board} and intersectionId=${
-                            listOffsetsBoards
-                                .filter { it.selected.value == true }
-                                .lastOrNull()!!.board!!.id
-                        }"
-                    )
+//                    println(
+//                        "${board} and intersectionId=${
+//                            listOffsetsBoards
+//                                .filter { it.selected.value == true }
+//                                .lastOrNull()!!.board!!.id
+//                        }"
+//                    )
 
                     viewModel.updateBoard(
                         BoardModel(
@@ -478,6 +443,7 @@ Column (modifier= Modifier
             currentBoard.value = board!!.id
         },
         onLongClick = {
+            currentBoard.value = board!!.id
             expanded = true
         },
     )
@@ -486,16 +452,48 @@ Column (modifier= Modifier
 
 ){
     Icon(
-        modifier = Modifier.align(Alignment.CenterHorizontally),
-        imageVector = ImageVector.vectorResource(id = R.drawable.ic_baseline_history_24),
+        modifier = Modifier
+            .align(Alignment.CenterHorizontally)
+        ,
+        imageVector = ImageVector.vectorResource(id = R.drawable.ic_baseline_bookmark_24),
         contentDescription = "",
-        tint = Color.Black
+        tint = Color.Red,
         )
     Text(
         modifier = Modifier.align(Alignment.CenterHorizontally),
         text = board?.name.orEmpty() ,
         color=Color.Black)
 
+
+    DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false  },modifier = Modifier
+    ) {
+
+        DropdownMenuItem(onClick = {
+            expanded = false
+            openDialogAdding.value = true
+
+        }){
+            Text("Добавить")
+        }
+        DropdownMenuItem(onClick = {
+            expanded = false
+            openDialogEditing.value = true
+        }){
+            Text(text = "Редактировать")
+        }
+        if (board.let { if(it!=null) it.id else 1L} != 1L){
+            DropdownMenuItem(onClick = {
+                if (allBoards.filter { it.id == board?.id }.first().let { if(it != null) it.id else 1L } != 1L){
+                    viewModel.deleteBoard(allBoards.filter { it.id == board?.id }.first())
+                }
+                expanded = false
+            }){
+                Text(text = "Удалить")
+            }
+        }
+
+
+    }
 
 }
 

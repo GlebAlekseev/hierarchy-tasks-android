@@ -10,6 +10,7 @@ import data.database.model.TaskDbModel
 import domain.model.BoardModel
 import domain.model.TaskModel
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 
@@ -22,8 +23,14 @@ class RepositoryTaskImpl(private val taskDao: TaskDao, private val mapper: DbMap
     }
     private fun initDatabase(postInitAction: () -> Unit) {
         GlobalScope.launch {
-            postInitAction.invoke()
+            delay(300)
 
+            val helperTasks = TaskDbModel.HELPER_TASKS
+
+            if (taskDao.getAll().isEmpty()){
+                taskDao.insertAll(*helperTasks)
+            }
+            postInitAction.invoke()
         }
     }
 

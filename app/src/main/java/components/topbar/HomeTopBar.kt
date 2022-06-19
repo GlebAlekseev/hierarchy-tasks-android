@@ -41,7 +41,7 @@ fun HomeTopBar(
                 scope.launch { dataMain.state.show() }
             }
         }){
-            Text(text = allBoards.filter { it.id==dataMain.currentBoard.value }.firstOrNull().let { if (it != null) it.name else "" }
+            Text(text = allBoards.filter { it.id==dataMain.boardParentId.value }.firstOrNull().let { if (it != null) it.name else "" }
                 ,color=Color.Black, fontWeight = FontWeight.Bold, fontSize = 24.sp)
             Icon(imageVector = ImageVector.vectorResource(id = R.drawable.ic_baseline_down_24), contentDescription = "", modifier = Modifier.padding(
                 PaddingValues(start = 15.dp, top = 5.dp)

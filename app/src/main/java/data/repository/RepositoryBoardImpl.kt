@@ -21,9 +21,11 @@ class RepositoryBoardImpl(private val boardDao: BoardDao, private val mapper: Db
     private fun initDatabase(postInitAction: () -> Unit) {
         GlobalScope.launch {
             val rootBoard = BoardDbModel.ROOT_BOARD
+            val helperBoard = BoardDbModel.HELPER_BOARD
 
             if (boardDao.getAll().isEmpty()){
                 boardDao.insert(rootBoard)
+                boardDao.insert(helperBoard)
             }
             postInitAction.invoke()
 

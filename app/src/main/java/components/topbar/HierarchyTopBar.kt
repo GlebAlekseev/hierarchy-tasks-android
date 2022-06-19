@@ -35,7 +35,7 @@ fun HierarchyTopBar(
         horizontalArrangement = Arrangement.End
     ) {
         IconButton(onClick = {
-            dataMain.scale_content.value = 0.6f
+            dataMain.scale_content.value = 0.4f
             dataMain.offset_content.value = Offset(0f,0f)
         }) {
             Icon(imageVector = ImageVector.vectorResource(id = R.drawable.ic_baseline_hierarchy_24), contentDescription ="" )

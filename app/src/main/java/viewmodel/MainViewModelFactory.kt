@@ -11,8 +11,9 @@ import data.repository.RepositoryTask
 @Suppress("UNCHECKED_CAST")
 class MainViewModelFactory(
     owner: SavedStateRegistryOwner,
-    private val repositoryTask: RepositoryTask,
-    private val repositoryBoard: RepositoryBoard,
+
+    private val repositoryTask: RepositoryBoard,
+    private val repositoryBoard: RepositoryTask,
     private val defaultArgs: Bundle? = null
 ) : AbstractSavedStateViewModelFactory(owner, defaultArgs) {
 
@@ -21,6 +22,6 @@ class MainViewModelFactory(
         modelClass: Class<T>,
         handle: SavedStateHandle
     ): T {
-        return MainViewModel(repositoryTask,repositoryBoard) as T
+        return MainViewModel(repositoryBoard,repositoryTask) as T
     }
 }

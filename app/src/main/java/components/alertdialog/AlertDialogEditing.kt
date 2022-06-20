@@ -3,11 +3,8 @@ package components.alertdialog
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.TextFieldValue
 import domain.model.BoardModel
@@ -20,21 +17,19 @@ import java.util.*
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun AlertDialogEditing(
-    openDialog: MutableState<Boolean>,
-    nameBoardState: MutableState<TextFieldValue>,
     viewModel: MainViewModel,
-    board: BoardModel?,
-    currentBoard: MutableState<Long>,
-    stateModal: ModalBottomSheetState,
-    scope: CoroutineScope
+    board: BoardModel?
 ) {
+    val openDialogEditing by viewModel.openDialogEditing.collectAsState()
+    val nameBoardAlertDialogEditing by viewModel.nameBoardAlertDialogEditing.collectAsState()
+    val currentBoardId by viewModel.currentBoardId.collectAsState()
     val scopeOther = rememberCoroutineScope()
     val allBoards: List<BoardModel> by viewModel.allBoards.observeAsState(emptyList())
 
-    if (openDialog.value) {
+    if (openDialogEditing) {
         AlertDialog(
             onDismissRequest = {
-                openDialog.value = false
+                viewModel.setOpenDialogEditing(false)
             },
             title = {
                 Text(text = "Редактирование доски")
@@ -42,9 +37,9 @@ fun AlertDialogEditing(
             text = {
                 Column() {
                     Text("Название")
-                    TextField(value = nameBoardState.value, onValueChange = {nameBoardState.value = it})
+                    TextField(value = nameBoardAlertDialogEditing, onValueChange = {viewModel.setNameBoardAlertDialogEditing(it)})
                     println("$$$$$$$$$$$$$$$$$${board?.name}")
-                    Text(text = allBoards.filter { it.id == currentBoard.value }.firstOrNull()?.name.orEmpty(),
+                    Text(text = allBoards.filter { it.id == currentBoardId }.firstOrNull()?.name.orEmpty(),
                         )
                 }
 
@@ -56,12 +51,12 @@ fun AlertDialogEditing(
                     onClick = {
 //                        if(board.let { if (it != null) it.id else 1L } != 1L ){
                             viewModel.updateBoard(
-                                BoardModel(currentBoard.value,nameBoardState.value.text, SimpleDateFormat("dd:MM:yyyy hh:mm:ss").format(
+                                BoardModel(currentBoardId,nameBoardAlertDialogEditing, SimpleDateFormat("dd:MM:yyyy hh:mm:ss").format(
                                 Date()
-                            ),allBoards.filter { it.id == currentBoard.value }.firstOrNull().let { if (it != null) it.parent_id else 1L })
+                            ),allBoards.filter { it.id == currentBoardId }.firstOrNull().let { if (it != null) it.parent_id else 1L })
                             )
 //                        }
-                        openDialog.value = false
+                        viewModel.setOpenDialogEditing(false)
 
                     }) {
                     Text("Сохранить")

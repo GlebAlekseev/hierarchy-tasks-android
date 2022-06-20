@@ -14,7 +14,6 @@ import androidx.compose.ui.unit.ExperimentalUnitApi
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.project_am_manager.DataMain
 import com.example.project_am_manager.R
 import com.google.accompanist.pager.ExperimentalPagerApi
 import domain.model.BoardModel
@@ -24,10 +23,12 @@ import viewmodel.MainViewModel
 @OptIn(ExperimentalMaterialApi::class, ExperimentalPagerApi::class, ExperimentalUnitApi::class)
 @Composable
 fun HomeTopBar(
-    dataMain: DataMain
+  viewModel: MainViewModel
 ) {
     val scope = rememberCoroutineScope()
-    val allBoards: List<BoardModel> by dataMain.viewModel.allBoards.observeAsState(emptyList())
+    val allBoards: List<BoardModel> by viewModel.allBoards.observeAsState(emptyList())
+    val stateModalMain by viewModel.stateModalMain.collectAsState()
+    val parentBoardId by viewModel.parentBoardId.collectAsState()
 
     Row(modifier = Modifier
         .fillMaxWidth()
@@ -35,13 +36,13 @@ fun HomeTopBar(
         .padding(horizontal = 20.dp)
         .padding(bottom = 10.dp), horizontalArrangement = Arrangement.SpaceBetween) {
         Row(modifier = Modifier.clickable {
-            if (dataMain.state.isVisible){
-                scope.launch { dataMain.state.hide() }
+            if (stateModalMain.isVisible){
+                scope.launch { stateModalMain.hide() }
             }else{
-                scope.launch { dataMain.state.show() }
+                scope.launch { stateModalMain.show() }
             }
         }){
-            Text(text = allBoards.filter { it.id==dataMain.boardParentId.value }.firstOrNull().let { if (it != null) it.name else "" }
+            Text(text = allBoards.filter { it.id==parentBoardId }.firstOrNull().let { if (it != null) it.name else "" }
                 ,color=Color.Black, fontWeight = FontWeight.Bold, fontSize = 24.sp)
             Icon(imageVector = ImageVector.vectorResource(id = R.drawable.ic_baseline_down_24), contentDescription = "", modifier = Modifier.padding(
                 PaddingValues(start = 15.dp, top = 5.dp)

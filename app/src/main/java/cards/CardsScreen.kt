@@ -28,7 +28,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
-import com.example.project_am_manager.DataMain
 import com.example.project_am_manager.R
 import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.PagerState
@@ -38,17 +37,17 @@ import domain.model.TaskModel
 
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
-import com.example.project_am_manager.EditInputs
 import viewmodel.MainViewModel
-
 @OptIn(ExperimentalMaterialApi::class)
 @ExperimentalCoroutinesApi
 @Composable
 fun BoardsScreen(
-    editInputs: EditInputs
+  viewModel: MainViewModel,
+  isEdit: Boolean
 ) {
-    val allBoards: List<BoardModel> by editInputs.viewModel.allBoards.observeAsState(emptyList())
-    val expandedCardIds = editInputs.viewModel.expandedBoardIdsList.collectAsState()
+    val allBoards: List<BoardModel> by viewModel.allBoards.observeAsState(emptyList())
+    val expandedCardIds by viewModel.expandedBoardIdsList.collectAsState()
+    val allTasks: List<TaskModel> by viewModel.allTasks.observeAsState(emptyList())
 
     Scaffold(
         backgroundColor = Color(
@@ -60,64 +59,30 @@ fun BoardsScreen(
     ) {
         LazyColumn {
             itemsIndexed(allBoards.filter {a-> !allBoards.filter {b->
-                a.id==b.parent_id }.isNullOrEmpty()
+                a.id==b.parent_id && if (!isEdit) {!allTasks.filter { b.id == it.parent_id }.isNullOrEmpty()} else true }.isNullOrEmpty()
             }) { _, board ->
                 ExpandableCard(
-                    editInputs = editInputs,
-                    onCardArrowClick = { editInputs.viewModel.onBoardArrowClicked(board.id) },
-                    expanded = expandedCardIds.value.contains(board.id),
-                    board = board
+                    viewModel = viewModel,
+                    onCardArrowClick = { viewModel.onBoardArrowClicked(board.id) },
+                    expanded = expandedCardIds.contains(board.id),
+                    board = board,
+                    isEdit
                 )
             }
         }
     }
 }
-
-@OptIn(ExperimentalMaterialApi::class, ExperimentalPagerApi::class)
-@ExperimentalCoroutinesApi
-@Composable
-fun BoardsScreen(
-    dataMain: DataMain
-) {
-    val allBoards: List<BoardModel> by dataMain.viewModel.allBoards.observeAsState(emptyList())
-    val allTasks: List<TaskModel> by dataMain.viewModel.allTasks.observeAsState(emptyList())
-    val expandedCardIds = dataMain.viewModel.expandedBoardIdsList.collectAsState()
-
-    Scaffold(
-        backgroundColor = Color(
-            ContextCompat.getColor(
-                LocalContext.current,
-                R.color.colorDayNightWhite
-            )
-        )
-    ) {
-        LazyColumn {
-            itemsIndexed(allBoards.filter {a-> !allBoards.filter {b->
-                a.id==b.parent_id && !allTasks.filter { b.id == it.parent_id }.isNullOrEmpty() }.isNullOrEmpty()
-            }) { _, board ->
-                ExpandableCard(
-                    dataMain = dataMain,
-                    onCardArrowClick = { dataMain.viewModel.onBoardArrowClicked(board.id) },
-                    expanded = expandedCardIds.value.contains(board.id),
-                    board = board
-                )
-            }
-        }
-    }
-}
-
-
 
 
 @OptIn(ExperimentalMaterialApi::class, ExperimentalPagerApi::class)
 @SuppressLint("UnusedTransitionTargetStateParameter")
 @Composable
 fun ExpandableCard(
-    dataMain: DataMain? = null,
-    editInputs: EditInputs? = null,
+    viewModel: MainViewModel,
     onCardArrowClick: () -> Unit,
     expanded: Boolean,
-    board: BoardModel
+    board: BoardModel,
+    isEdit: Boolean
 ) {
     val transitionState = remember {
         MutableTransitionState(expanded).apply {
@@ -135,7 +100,6 @@ fun ExpandableCard(
     }, label = "colorTransition") {
         if (expanded) Color.Black else Color.White
     }
-
     val cardPaddingHorizontal by transition.animateDp({
         tween(durationMillis = EXPAND_ANIMATION_DURATION)
     }, label = "paddingTransition") {
@@ -163,8 +127,6 @@ fun ExpandableCard(
     Card(
         backgroundColor = cardBgColor,
         contentColor = cardColor,
-//        elevation = cardElevation,
-//        shape = RoundedCornerShape(cardRoundedCorners),
         modifier = Modifier
             .fillMaxWidth()
             .padding(
@@ -174,27 +136,14 @@ fun ExpandableCard(
     ) {
         Column {
 
-            if(editInputs != null){
-                Box {
-                    CardArrow(
-                        degrees = arrowRotationDegree,
-                        onClick = onCardArrowClick
-                    )
-                    CardTitle(title = board.name)
-                }
-                ExpandableContent(editInputs = editInputs,visible = expanded,board = board)
-            }else if(dataMain != null){
-                Box {
-                    CardArrow(
-                        degrees = arrowRotationDegree,
-                        onClick = onCardArrowClick
-                    )
-                    CardTitle(title = board.name)
-                }
-                ExpandableContent(dataMain= dataMain,visible = expanded,board = board)
+            Box {
+                CardArrow(
+                    degrees = arrowRotationDegree,
+                    onClick = onCardArrowClick
+                )
+                CardTitle(title = board.name)
             }
-
-
+            ExpandableContent(viewModel = viewModel, visible = expanded, board = board,isEdit = isEdit)
         }
     }
 }
@@ -234,20 +183,19 @@ fun CardTitle(title: String) {
 @OptIn(ExperimentalAnimationApi::class, ExperimentalMaterialApi::class, ExperimentalPagerApi::class)
 @Composable
 fun ExpandableContent(
+    viewModel: MainViewModel,
     board:BoardModel,
-    dataMain: DataMain? = null,
-    editInputs: EditInputs? = null,
     visible: Boolean = true,
+    isEdit: Boolean
 
 ) {
-    val allBoards: List<BoardModel> by
-    if (editInputs != null) editInputs.viewModel.allBoards.observeAsState(emptyList()) else dataMain!!.viewModel.allBoards.observeAsState(emptyList())
-
-    val allTasks: List<TaskModel> by
-    if (editInputs != null) editInputs.viewModel.allTasks.observeAsState(emptyList()) else dataMain!!.viewModel.allTasks.observeAsState(emptyList())
-
-
+    val allBoards: List<BoardModel> by viewModel.allBoards.observeAsState(emptyList())
+    val allTasks: List<TaskModel> by viewModel.allTasks.observeAsState(emptyList())
+    val stateModalMain by viewModel.stateModalMain .collectAsState()
+    val indexAnimateTarget by viewModel.indexAnimateTarget .collectAsState()
+    val pagerState by viewModel.pagerState .collectAsState()
     val scope = rememberCoroutineScope()
+
     val enterFadeIn = remember {
         fadeIn(
             animationSpec = TweenSpec(
@@ -280,24 +228,24 @@ fun ExpandableContent(
             .padding(8.dp)
             .fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
             allBoards.filter {a-> a.parent_id == board.id  &&
-                    if (dataMain != null) {!allTasks.filter { a.id == it.parent_id  }.isNullOrEmpty()}else true}.forEach{
+                    if (!isEdit) {!allTasks.filter { a.id == it.parent_id  }.isNullOrEmpty()}else true}.forEach{
 
                 Box(modifier = Modifier
                     .clickable {
-                        if (editInputs != null) editInputs.parentBoardState.value = it.id
+                        if (isEdit) viewModel.setTransmittedParentId(it.id)
                         scope.launch {
-                            if (dataMain != null) {
-                                dataMain.state.hide()
-                                dataMain.currentBoard.value = it.id
-                                dataMain.boardParentId.value = it.parent_id
-
-                                if (dataMain.index_toAnimateGo.value != -1) {
-                                    println("##*** dataMain.index_toAnimateGo.value=${dataMain.index_toAnimateGo.value}")
-                                    dataMain.pagerState.animateScrollToPage(dataMain.index_toAnimateGo.value)
-                                    dataMain.pagerState.animateScrollToPage(dataMain.index_toAnimateGo.value)
+                            if (!isEdit) {
+                                stateModalMain.hide()
+                                viewModel.setCurrentBoardId(it.id)
+//                                viewModel.setParentBoardId(it.parent_id)
+                                viewModel.refreshIndexAnimateTarget()
+                                if (indexAnimateTarget != -1) {
+//                                    println("##*** dataMain.index_toAnimateGo.value=${indexAnimateTarget}")
+                                    pagerState.animateScrollToPage(indexAnimateTarget)
+                                    pagerState.animateScrollToPage(indexAnimateTarget)
                                 }
-                            } else if (editInputs != null) {
-                                editInputs.stateModal.hide()
+                            } else if (isEdit) {
+                                viewModel.stateModalEdit.value.hide()
                             }
                         }
                     }
@@ -312,9 +260,7 @@ fun ExpandableContent(
                             .padding(horizontal = 16.dp))
                         Text(text = it.name, modifier = Modifier, fontWeight = FontWeight.W400)
                     }
-
                 }
-
             }
         }
     }

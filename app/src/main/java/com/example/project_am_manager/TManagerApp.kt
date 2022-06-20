@@ -60,27 +60,6 @@ fun TManagerApp(viewModel: MainViewModel) {
     }
 }
 
-@ExperimentalPagerApi
-@OptIn(ExperimentalMaterialApi::class)
-data class DataMain(
-    val scaffoldState: ScaffoldState,
-    val state: ModalBottomSheetState,
-    val scope: CoroutineScope,
-    val currentBoard: MutableState<Long>,
-    val boardParentId: MutableState<Long>,
-    val viewModel: MainViewModel,
-    val pagerState: PagerState,
-    val index_toAnimateGo: MutableState<Int>,
-    val stateModal: ModalBottomSheetState,
-    val openDialogEditing: MutableState<Boolean>,
-    val scale_content: MutableState<Float>,
-    val offset_content: MutableState<Offset>,
-    val isSelected: MutableState<Boolean>,
-    val screenState: MutableState<Screen>,
-    val navController: NavHostController,
-    var selectedItem: MutableState<Int>
-)
-
 private data class NavigationItem(
     val index: Int,
     val vectorResourceId: Int,
@@ -90,109 +69,142 @@ private data class NavigationItem(
 
 @OptIn(ExperimentalMaterialApi::class, ExperimentalPagerApi::class, ExperimentalAnimationApi::class)
 @Composable
-fun AppContent(viewModel: MainViewModel){
+fun AppContent(viewModel: MainViewModel) {
+    val currentBoardId by viewModel.currentBoardId.collectAsState()
+    val parentBoardId by viewModel.parentBoardId.collectAsState()
 
-    val data = DataMain(
-        scaffoldState = rememberScaffoldState(),
-        state = rememberModalBottomSheetState(ModalBottomSheetValue.Hidden),
-        scope = rememberCoroutineScope(),
-        currentBoard = remember { mutableStateOf(1L) },
-        boardParentId = remember { mutableStateOf(1L) },
-        viewModel = viewModel,
-        pagerState = rememberPagerState(),
-        index_toAnimateGo = remember {mutableStateOf(1)},
-        stateModal = rememberModalBottomSheetState(ModalBottomSheetValue.Hidden),
-        openDialogEditing = remember { mutableStateOf(false)  },
-        scale_content = remember { mutableStateOf(0.4f) },
-        offset_content = remember { mutableStateOf(Offset(0f,0f)) },
-        isSelected = remember { mutableStateOf(false)},
-        screenState = TManagerRouter.currentScreen,
-        navController = rememberAnimatedNavController(),
-        selectedItem = remember { mutableStateOf(0) }
-    )
+//    val data = DataMain(
+//        scaffoldState = rememberScaffoldState(),
+//        state = rememberModalBottomSheetState(ModalBottomSheetValue.Hidden),
+//        scope = rememberCoroutineScope(),
+//        currentBoard = remember { mutableStateOf(1L) },
+//        boardParentId = remember { mutableStateOf(1L) },
+//        viewModel = viewModel,
+//        pagerState = rememberPagerState(),
+//        index_toAnimateGo = remember {mutableStateOf(1)},
+//        stateModal = rememberModalBottomSheetState(ModalBottomSheetValue.Hidden),
+//        openDialogEditing = remember { mutableStateOf(false)  },
+//        scale_content = remember { mutableStateOf(0.4f) },
+//        offset_content = remember { mutableStateOf(Offset(0f,0f)) },
+//        isSelected = remember { mutableStateOf(false)},
+//        screenState = TManagerRouter.currentScreen,
+//        navController = rememberAnimatedNavController(),
+//        selectedItem = remember { mutableStateOf(0) }
+//    )
+
+    viewModel.setAnimateNavController(rememberAnimatedNavController())
+    viewModel.setPagerState(rememberPagerState())
+
+
 
     val allBoards: List<BoardModel> by viewModel.allBoards.observeAsState(emptyList())
     val allTasks: List<TaskModel> by viewModel.allTasks.observeAsState(emptyList())
-    data.boardParentId.value = allBoards.filter { it.id == data.currentBoard.value}.lastOrNull().let { if (it != null) it.parent_id else 1 }
 
-    data.index_toAnimateGo.value = allBoards.filter {a->  (a.parent_id == data.boardParentId.value && !allTasks.filter{ it.parent_id == a.id } .isNullOrEmpty()) }
-        .indexOf(if (allBoards.filter { it.id == data.currentBoard.value }.lastOrNull()!=null) allBoards.filter { it.id == data.currentBoard.value }.lastOrNull() else BoardModel(0,"","",0) )
-        .let { if (it == -1) 0 else it }
-    println("##$$ data.index_toAnimateGo.value=${data.index_toAnimateGo.value}")
+//    viewModel.setParentBoardId(allBoards.filter { it.id == currentBoardId }.lastOrNull()
+//        .let { if (it != null) it.parent_id else 1 })
+
+//    viewModel.setIndexAnimateTarget(allBoards.filter { a ->
+//        (a.parent_id == parentBoardId && !allTasks.filter { it.parent_id == a.id }
+//            .isNullOrEmpty())
+//    }
+//        .indexOf(if (allBoards.filter { it.id == currentBoardId }
+//                .lastOrNull() != null) allBoards.filter { it.id == currentBoardId }
+//            .lastOrNull() else BoardModel(0, "", "", 0))
+//        .let { if (it == -1) 0 else it })
 
     Crossfade(targetState = TManagerRouter.currentScreen) { screenState: MutableState<Screen> ->
-        data.screenState.value = screenState.value
+        viewModel.setScreenStateMain(screenState.value)
         Scaffold(
-            scaffoldState = data.scaffoldState,
-//            topBar = {GetTopAppBar(data)},
-            bottomBar = { GetBottomNavigationComponent(data) },
-//            content = { GetMainScreenContainer(data) },
-            content = {NavigateContainer(data)},
-            floatingActionButton = {MainExtendedFloatingActionButton(data)}
+            bottomBar = { GetBottomNavigationComponent(viewModel) },
+            content = { NavigateContainer(viewModel) },
+            floatingActionButton = { MainExtendedFloatingActionButton(viewModel) }
         )
     }
-
-    ModalBottomSheetChoose(data)
+    ModalBottomSheetChoose(viewModel)
 }
 
 @OptIn(ExperimentalPagerApi::class, ExperimentalAnimationApi::class)
 @Composable
-fun NavigateContainer(data: DataMain){
-    AnimatedNavHost(data.navController, startDestination = "Home") {
+fun NavigateContainer(viewModel: MainViewModel) {
+    val animateNavController by viewModel.animateNavController.collectAsState()
+
+    AnimatedNavHost(animateNavController!!, startDestination = "Home") {
         composable(
             "Home",
             enterTransition = {
                 when (initialState.destination.route) {
                     "Hierarchy" ->
-                        slideIntoContainer(AnimatedContentScope.SlideDirection.Right, animationSpec = tween(300))
+                        slideIntoContainer(
+                            AnimatedContentScope.SlideDirection.Right,
+                            animationSpec = tween(300)
+                        )
                     "History" ->
-                        slideIntoContainer(AnimatedContentScope.SlideDirection.Right, animationSpec = tween(300))
+                        slideIntoContainer(
+                            AnimatedContentScope.SlideDirection.Right,
+                            animationSpec = tween(300)
+                        )
                     else -> null
                 }
             },
             exitTransition = {
                 when (targetState.destination.route) {
                     "Hierarchy" ->
-                        slideOutOfContainer(AnimatedContentScope.SlideDirection.Left, animationSpec = tween(300))
+                        slideOutOfContainer(
+                            AnimatedContentScope.SlideDirection.Left,
+                            animationSpec = tween(300)
+                        )
                     "History" ->
-                        slideOutOfContainer(AnimatedContentScope.SlideDirection.Left, animationSpec = tween(300))
+                        slideOutOfContainer(
+                            AnimatedContentScope.SlideDirection.Left,
+                            animationSpec = tween(300)
+                        )
                     else -> null
                 }
             },
         ) {
-            data.screenState.value = Screen.Home
+            viewModel.setScreenStateMain(Screen.Home)
             Column() {
-                HomeTopBar(data)
-                HomeScreen(data)
+                HomeTopBar(viewModel)
+                HomeScreen(viewModel)
             }
-
-
         }
         composable(
             "Hierarchy",
             enterTransition = {
                 when (initialState.destination.route) {
                     "Home" ->
-                        slideIntoContainer(AnimatedContentScope.SlideDirection.Left, animationSpec = tween(300))
+                        slideIntoContainer(
+                            AnimatedContentScope.SlideDirection.Left,
+                            animationSpec = tween(300)
+                        )
                     "History" ->
-                        slideIntoContainer(AnimatedContentScope.SlideDirection.Right, animationSpec = tween(300))
+                        slideIntoContainer(
+                            AnimatedContentScope.SlideDirection.Right,
+                            animationSpec = tween(300)
+                        )
                     else -> null
                 }
             },
             exitTransition = {
                 when (targetState.destination.route) {
                     "Home" ->
-                        slideOutOfContainer(AnimatedContentScope.SlideDirection.Right, animationSpec = tween(300))
+                        slideOutOfContainer(
+                            AnimatedContentScope.SlideDirection.Right,
+                            animationSpec = tween(300)
+                        )
                     "History" ->
-                        slideOutOfContainer(AnimatedContentScope.SlideDirection.Left, animationSpec = tween(300))
+                        slideOutOfContainer(
+                            AnimatedContentScope.SlideDirection.Left,
+                            animationSpec = tween(300)
+                        )
                     else -> null
                 }
             },
         ) {
-            data.screenState.value = Screen.Hierarchy
+            viewModel.setScreenStateMain(Screen.Hierarchy)
             Column() {
-                HierarchyTopBar(data)
-                HierarchyScreen(data)
+                HierarchyTopBar(viewModel)
+                HierarchyScreen(viewModel)
             }
 
         }
@@ -201,26 +213,38 @@ fun NavigateContainer(data: DataMain){
             enterTransition = {
                 when (initialState.destination.route) {
                     "Home" ->
-                        slideIntoContainer(AnimatedContentScope.SlideDirection.Left, animationSpec = tween(300))
+                        slideIntoContainer(
+                            AnimatedContentScope.SlideDirection.Left,
+                            animationSpec = tween(300)
+                        )
                     "Hierarchy" ->
-                        slideIntoContainer(AnimatedContentScope.SlideDirection.Left, animationSpec = tween(300))
+                        slideIntoContainer(
+                            AnimatedContentScope.SlideDirection.Left,
+                            animationSpec = tween(300)
+                        )
                     else -> null
                 }
             },
             exitTransition = {
                 when (targetState.destination.route) {
                     "Home" ->
-                        slideOutOfContainer(AnimatedContentScope.SlideDirection.Right, animationSpec = tween(300))
+                        slideOutOfContainer(
+                            AnimatedContentScope.SlideDirection.Right,
+                            animationSpec = tween(300)
+                        )
                     "Hierarchy" ->
-                        slideOutOfContainer(AnimatedContentScope.SlideDirection.Right, animationSpec = tween(300))
+                        slideOutOfContainer(
+                            AnimatedContentScope.SlideDirection.Right,
+                            animationSpec = tween(300)
+                        )
                     else -> null
                 }
             },
         ) {
-            data.screenState.value = Screen.History
+            viewModel.setScreenStateMain(Screen.History)
             Column {
                 HistoryTopBar()
-                HistoryScreen(data)
+                HistoryScreen(viewModel)
             }
 
         }
@@ -231,69 +255,46 @@ fun NavigateContainer(data: DataMain){
 }
 
 
-
-@OptIn(ExperimentalMaterialApi::class, ExperimentalPagerApi::class)
-@Composable
-fun GetTopAppBar(
-    data: DataMain
-){
-    when (data.screenState.value) {
-        Screen.Home ->   HomeTopBar(data)
-        Screen.Hierarchy -> HierarchyTopBar(data)
-        Screen.History -> HistoryTopBar()
-    }
-}
-
-@OptIn(ExperimentalMaterialApi::class, ExperimentalPagerApi::class, ExperimentalComposeUiApi::class)
-@Composable
-fun GetMainScreenContainer(
-    data: DataMain
-) {
-    Surface(
-        color = MaterialTheme.colors.background,
-        modifier = Modifier,
-    ) {
-        when (data.screenState.value) {
-            Screen.Home -> HomeScreen(data)
-            Screen.Hierarchy -> HierarchyScreen(data)
-            Screen.History -> HistoryScreen(data)
-        }
-    }
-}
-
 @OptIn(ExperimentalPagerApi::class)
 @Composable
 fun GetBottomNavigationComponent(
-    dataMain: DataMain
+  viewModel: MainViewModel
 ) {
-
+    val animateNavController by viewModel.animateNavController.collectAsState()
+    val selectedItem by viewModel.selectedItem.collectAsState()
 
     val items = listOf(
-        NavigationItem(0,R.drawable.ic_baseline_home_24,R.string.home, "Home"),
-        NavigationItem(1,R.drawable.ic_baseline_hierarchy_24,R.string.hierarchy, "Hierarchy"),
-        NavigationItem(2,R.drawable.ic_baseline_history_24,R.string.history, "History"),
+        NavigationItem(0, R.drawable.ic_baseline_home_24, R.string.home, "Home"),
+        NavigationItem(1, R.drawable.ic_baseline_hierarchy_24, R.string.hierarchy, "Hierarchy"),
+        NavigationItem(2, R.drawable.ic_baseline_history_24, R.string.history, "History"),
     )
-    BottomNavigation{
+    BottomNavigation {
         items.forEach {
             BottomNavigationItem(
-                selected = dataMain.selectedItem.value == it.index,
+                selected = selectedItem == it.index,
                 onClick = {
-                    dataMain.selectedItem.value = it.index
-//                    dataMain.screenState.value = it.screen
-                    dataMain.navController.navigate(it.screen)
+                    viewModel.setSelectedItem(it.index)
+                    animateNavController!!.navigate(it.screen)
                 },
-                icon = {Icon(imageVector = ImageVector.vectorResource(
-                    id = it.vectorResourceId),
-                    contentDescription = stringResource(id = it.contentDescriptionResourceId),
-                    tint = Color.Black,
-                    modifier = Modifier
-                        .drawBehind {
-                            if (dataMain.selectedItem.value == it.index){
-                                drawRoundRect(Color(android.graphics.Color.parseColor("#F0F0F0")), Offset(-size.width,-size.height*0.4f/2), Size(size.width*3f,size.height*1.4f),
-                                    cornerRadius = CornerRadius(50f,50f))
+                icon = {
+                    Icon(imageVector = ImageVector.vectorResource(
+                        id = it.vectorResourceId
+                    ),
+                        contentDescription = stringResource(id = it.contentDescriptionResourceId),
+                        tint = Color.Black,
+                        modifier = Modifier
+                            .drawBehind {
+                                if (selectedItem == it.index) {
+                                    drawRoundRect(
+                                        Color(android.graphics.Color.parseColor("#F0F0F0")),
+                                        Offset(-size.width, -size.height * 0.4f / 2),
+                                        Size(size.width * 3f, size.height * 1.4f),
+                                        cornerRadius = CornerRadius(50f, 50f)
+                                    )
+                                }
                             }
-                        }
-                )}
+                    )
+                }
             )
         }
     }

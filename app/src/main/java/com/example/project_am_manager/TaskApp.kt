@@ -28,76 +28,45 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 @Composable
-fun TaskApp(viewModel: MainViewModel,id:Long,idCurrentBoard:Long) {
+fun TaskApp(viewModel: MainViewModel) {
     Project_AM_ManagerTheme{
-        AppContent(viewModel,id,idCurrentBoard)
+        TaskContent(viewModel)
     }
 }
 
 @OptIn(ExperimentalMaterialApi::class)
-data class EditInputs(
-    val viewModel: MainViewModel,
-    val stateModal: ModalBottomSheetState,
-    val scope: CoroutineScope,
-    val scaffoldState: ScaffoldState,
-    val nameState: MutableState<TextFieldValue>,
-    var currentDate: String,
-    val descriptionState: MutableState<TextFieldValue>,
-    var parentBoardState: MutableState<Long>,
-    var idCurrentBoard: Long
-)
-
-@OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun AppContent(viewModel: MainViewModel,id:Long,idCurrentBoard: Long){
-    val stateModal = rememberModalBottomSheetState(ModalBottomSheetValue.Hidden)
-    val scaffoldState: ScaffoldState = rememberScaffoldState()
-    val scope = rememberCoroutineScope()
-    val nameState = remember { mutableStateOf(TextFieldValue()) }
-    var currentDate: String = SimpleDateFormat("dd:MM:yyyy hh:mm:ss").format(Date())
-    val descriptionState = remember { mutableStateOf(TextFieldValue()) }
-    val parentBoardState = remember { mutableStateOf(idCurrentBoard) }
-
-    if (id != 0L){
-        val allTasks: List<TaskModel> by viewModel.allTasks.observeAsState(emptyList())
-        nameState.value = TextFieldValue(allTasks.filter { it.id == id }.firstOrNull().let { if (it != null) it.name else  "error"})
-        descriptionState.value = TextFieldValue(allTasks.filter { it.id == id }.firstOrNull().let { if (it != null) it.description else  "error"})
-        currentDate = allTasks.filter { it.id == id }.firstOrNull().let { if (it != null) it.date else  "error"}
-        parentBoardState.value =  allTasks.filter { it.id == id }.firstOrNull().let { if (it != null) it.parent_id else  0}
-    }
-
-    val editInputs = EditInputs(viewModel,stateModal,scope,scaffoldState,nameState,currentDate,descriptionState,parentBoardState,idCurrentBoard)
-
+fun TaskContent(viewModel: MainViewModel){
 
     Crossfade(targetState = TaskRouter.currentScreen) { screenState: MutableState<ScreenTask> ->
         Scaffold(
-            topBar = { TopTaskAppBar(screenState,descriptionState) },
-            content = { MainScreenTaskContainer(screenState,editInputs) }
+            topBar = { TopTaskAppBar(screenState,viewModel) },
+            content = { MainScreenTaskContainer(screenState,viewModel) }
         )
     }
 
-    ModalBottomSheetChoose(editInputs = editInputs)
+    ModalBottomSheetChoose(viewModel,true)
 
+    val transmittedId by viewModel.transmittedId.collectAsState()
+    val descriptionTextFieldEdit by viewModel.descriptionTextFieldEdit.collectAsState()
+    val nameTextFieldEdit by viewModel.nameTextFieldEdit.collectAsState()
+    val transmittedParentId by viewModel.transmittedParentId .collectAsState()
 
-    val openDialog = remember { mutableStateOf(false)  }
-    AlertDialogSave(openDialog,editInputs,id)
-    val allTasks: List<TaskModel> by editInputs.viewModel.allTasks.observeAsState(emptyList())
+    AlertDialogSave(viewModel)
+    val allTasks: List<TaskModel> by viewModel.allTasks.observeAsState(emptyList())
     val context = LocalContext.current as TaskActivity
 
     BackButtonAction {
-
-        val name_descr_parent_db = allTasks.filter { it.id == id }.lastOrNull().let { if (it != null) it.name + it.description + it.parent_id else "" }
-
-        if (id == 0L && editInputs.nameState.value.text.length == 0 && editInputs.descriptionState.value.text.length == 0 ){
-            openDialog.value = false
+        val name_descr_parent_db = allTasks.filter { it.id == transmittedId }.lastOrNull().let { if (it != null) it.name + it.description + it.parent_id else "" }
+        if (transmittedId == 0L && nameTextFieldEdit.length == 0 && descriptionTextFieldEdit.length == 0 ){
+            viewModel.setOpenDialogSave(false)
             context.finish()
-        }else if (name_descr_parent_db == editInputs.nameState.value.text + editInputs.descriptionState.value.text + editInputs.parentBoardState.value.toString()){
-            openDialog.value = false
+        }else if (name_descr_parent_db == nameTextFieldEdit + descriptionTextFieldEdit + transmittedParentId){
+            viewModel.setOpenDialogSave(false)
             context.finish()
         }else{
-            openDialog.value = true
+            viewModel.setOpenDialogSave(true)
         }
-
     }
 }
 
@@ -105,11 +74,11 @@ fun AppContent(viewModel: MainViewModel,id:Long,idCurrentBoard: Long){
 @Composable
 fun MainScreenTaskContainer(
     screenState: MutableState<ScreenTask>,
-    editInputs: EditInputs
+    viewModel: MainViewModel
 ){
     when (screenState.value) {
-        ScreenTask.Edit -> EditScreen(editInputs)
-        ScreenTask.View -> ViewScreen(editInputs)
+        ScreenTask.Edit -> EditScreen(viewModel)
+        ScreenTask.View -> ViewScreen(viewModel)
     }
 }
 

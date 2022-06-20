@@ -16,7 +16,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.project_am_manager.DataMain
 import com.example.project_am_manager.MainActivity
 import com.himanshoe.kalendar.ui.Kalendar
 import com.himanshoe.kalendar.ui.KalendarType
@@ -32,18 +31,15 @@ import java.util.*
 @OptIn(ExperimentalPagerApi::class)
 @Composable
 fun HistoryScreen(
-    dataMain: DataMain
+    viewModel: MainViewModel
 ) {
-//    BackButtonAction {
-//        TManagerRouter.goBack()
-//    }
-    LazyColumnDemo(dataMain)
+    LazyColumnDemo(viewModel)
 }
 
 @OptIn(ExperimentalPagerApi::class)
 @Composable
-fun LazyColumnDemo(dataMain: DataMain) {
-    val allTasks: List<TaskModel> by dataMain.viewModel.allTasks.observeAsState(emptyList())
+fun LazyColumnDemo(viewModel: MainViewModel) {
+    val allTasks: List<TaskModel> by viewModel.allTasks.observeAsState(emptyList())
     val formatter = SimpleDateFormat("dd:MM:yyyy hh:mm:ss", Locale.US)
     val currentDate: MutableState<String> = remember {
         mutableStateOf(SimpleDateFormat("yyyy-MM-dd").format(Date()))
@@ -56,7 +52,7 @@ fun LazyColumnDemo(dataMain: DataMain) {
         itemsIndexed(zeroTaskModel +allTasks.filter {
             currentDate.value == SimpleDateFormat("yyyy-MM-dd").format(formatter.parse(it.date)) }, itemContent = { index, item ->
             if (index == 0){
-                Kalendar(viewModel=dataMain.viewModel,kalendarType = KalendarType.Firey(), onCurrentDayClick = { day, event ->
+                Kalendar(viewModel=viewModel,kalendarType = KalendarType.Firey(), onCurrentDayClick = { day, event ->
                     currentDate.value = day.toString()
                 }, errorMessage = {
 
@@ -66,7 +62,7 @@ fun LazyColumnDemo(dataMain: DataMain) {
                     .height(10.dp))
             }
             else{
-                ToastContent(dataMain,item)
+                ToastContent(viewModel,item)
                 if (index == allTasks.filter {currentDate.value == SimpleDateFormat("yyyy-MM-dd").format(formatter.parse(it.date)) }.size){
                     Spacer(modifier = Modifier
                         .fillMaxWidth()

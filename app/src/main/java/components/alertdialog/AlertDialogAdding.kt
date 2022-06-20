@@ -7,6 +7,8 @@ import androidx.compose.material.Text
 import androidx.compose.material.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.text.input.TextFieldValue
 import domain.model.BoardModel
 import viewmodel.MainViewModel
@@ -14,11 +16,14 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 @Composable
-fun AlertDialogAdding(openDialog: MutableState<Boolean>, nameBoardState: MutableState<TextFieldValue>, viewModel: MainViewModel, board: BoardModel?) {
-    if (openDialog.value) {
+fun AlertDialogAdding(viewModel: MainViewModel) {
+    val openDialogAdding by viewModel.openDialogAdding.collectAsState()
+    val nameBoardAlertDialogAdding by viewModel.nameBoardAlertDialogAdding.collectAsState()
+    val currentBoardId by viewModel.currentBoardId.collectAsState()
+    if (openDialogAdding) {
         AlertDialog(
             onDismissRequest = {
-                openDialog.value = false
+                viewModel.setOpenDialogAdding(false)
             },
             title = {
                 Text(text = "Добавление доски")
@@ -26,7 +31,7 @@ fun AlertDialogAdding(openDialog: MutableState<Boolean>, nameBoardState: Mutable
             text = {
                 Column() {
                     Text("Название")
-                    TextField(value = nameBoardState.value, onValueChange = {nameBoardState.value = it})
+                    TextField(value = nameBoardAlertDialogAdding, onValueChange = {viewModel.setNameBoardAlertDialogAdding(it)})
                 }
 
             },
@@ -34,12 +39,13 @@ fun AlertDialogAdding(openDialog: MutableState<Boolean>, nameBoardState: Mutable
                 Button(
 
                     onClick = {
-                        viewModel.insertBoard(
-                            BoardModel(0,nameBoardState.value.text, SimpleDateFormat("dd:MM:yyyy hh:mm:ss").format(
-                            Date()
-                        ),board.let { if (it != null) it.id else 0L })
-                        )
-                        openDialog.value = false
+                        val boardTmp = BoardModel(
+                            0,
+                            nameBoardAlertDialogAdding,
+                            SimpleDateFormat("dd:MM:yyyy hh:mm:ss").format(Date()),
+                            currentBoardId)
+                        viewModel.insertBoard(boardTmp)
+                        viewModel.setOpenDialogAdding(false)
 
                     }) {
                     Text("Добавить")

@@ -11,6 +11,8 @@ import androidx.compose.material.IconButton
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -19,13 +21,15 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import com.example.project_am_manager.R
 import routing.ScreenTask
+import viewmodel.MainViewModel
 
 
 @Composable
 fun TopTaskAppBar(
     screenState: MutableState<ScreenTask>,
-    descriptionState: MutableState<TextFieldValue>
+    viewModel: MainViewModel
 ) {
+    val descriptionTextFieldEdit by viewModel.descriptionTextFieldEdit.collectAsState()
 
     val localBackPressed = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
     Row(modifier = Modifier
@@ -42,7 +46,7 @@ fun TopTaskAppBar(
             )
         }
         Row() {
-            Text(text = "Символов: " + descriptionState.value.text.length,color=Color.White,
+            Text(text = "Символов: " + descriptionTextFieldEdit.length,color=Color.White,
                 modifier = Modifier
                     .padding(12.dp)
             )
@@ -61,8 +65,4 @@ fun TopTaskAppBar(
             }
         }
     }
-
-
-
-
 }

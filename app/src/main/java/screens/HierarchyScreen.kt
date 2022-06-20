@@ -44,7 +44,6 @@ import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
-import com.example.project_am_manager.DataMain
 import com.example.project_am_manager.MainActivity
 import com.example.project_am_manager.R
 import com.google.accompanist.pager.ExperimentalPagerApi
@@ -71,31 +70,26 @@ import kotlin.math.roundToInt
 @OptIn(ExperimentalMaterialApi::class, ExperimentalPagerApi::class)
 @Composable
 fun HierarchyScreen(
-    dataMain: DataMain
+    viewModel: MainViewModel
 ) {
-//    BackButtonAction {
-//        TManagerRouter.goBack()
-//    }
-//
 
-
-
-    TransformableSample(dataMain)
+    TransformableSample(viewModel)
 }
 @OptIn(ExperimentalMaterialApi::class, ExperimentalComposeUiApi::class, ExperimentalPagerApi::class)
 @Composable
 fun TransformableSample(
-    dataMain: DataMain
+   viewModel: MainViewModel
 ) {
     val state_scroll_horizontal = rememberScrollState()
     val state_scroll_vertical = rememberScrollState()
+    val scaleContent by viewModel.scaleContent.collectAsState()
+    val offsetContent by viewModel.offsetContent.collectAsState()
+    val screenHierarchyState by viewModel.screenHierarchyState.collectAsState()
+    val transformableState by viewModel.transformableState.collectAsState()
 
-    val state = rememberTransformableState { zoomChange, offsetChange, rotationChange ->
-        if (dataMain.scale_content.value*zoomChange >= 0.1){
-            dataMain.scale_content.value *= zoomChange
-            dataMain.offset_content.value += offsetChange
-        }
-    }
+
+
+
 
     Box(
         Modifier
@@ -107,27 +101,22 @@ fun TransformableSample(
             .pointerInput(Unit) {
                 detectDragGestures { change, dragAmount ->
                     change.consumeAllChanges()
-                    dataMain.offset_content.value += dragAmount
+                    viewModel.setOffsetContent(offsetContent+dragAmount)
                 }
             }
-            .transformable(state = state)
-            .offset { IntOffset((dataMain.offset_content.value.x).roundToInt(), (dataMain.offset_content.value.y).roundToInt()) }
+            .transformable(state = transformableState)
+            .offset { IntOffset((offsetContent.x).roundToInt(), (offsetContent.y).roundToInt()) }
             .graphicsLayer(
-                scaleX = dataMain.scale_content.value,
-                scaleY = dataMain.scale_content.value,
+                scaleX = scaleContent,
+                scaleY = scaleContent,
             ), contentAlignment = Alignment.CenterStart
     ){
 
-
-            val screenHierarchyState: MutableState<Screen> = remember {
-                mutableStateOf(Screen.Hierarchy)
-            }
             Column(modifier = Modifier
-//                .align(Alignment.CenterStart)
                 .background(Color.White), horizontalAlignment = Alignment.Start) {
-                when(screenHierarchyState.value){
-                    Screen.Hierarchy2 -> BuildingHierarchy(dataMain, screenHierarchyState)
-                    Screen.Hierarchy -> BuildingHierarchy(dataMain, screenHierarchyState)
+                when(screenHierarchyState){
+                    Screen.Hierarchy2 -> BuildingHierarchy(viewModel)
+                    Screen.Hierarchy -> BuildingHierarchy(viewModel)
                     else -> {}
                 }
             }
@@ -139,10 +128,10 @@ fun TransformableSample(
 @OptIn(ExperimentalMaterialApi::class, ExperimentalPagerApi::class)
 @Composable
 fun BuildingHierarchy(
-    dataMain: DataMain,
-    screenHierarchyState: MutableState<Screen>
+    viewModel: MainViewModel
 ){
-    val allBoards: List<BoardModel> by dataMain.viewModel.allBoards.observeAsState(emptyList())
+    val allBoards: List<BoardModel> by viewModel.allBoards.observeAsState(emptyList())
+    val currentBoardId by viewModel.currentBoardId.collectAsState()
 
         Row() {
             val listOffsetsBoards: MutableList<boardBlock> = remember {
@@ -152,12 +141,12 @@ fun BuildingHierarchy(
             Column(modifier = Modifier
                 .align(Alignment.CenterVertically)
             ) {
-
-                Board(dataMain.viewModel,allBoards.filter { it.id == it.parent_id }.firstOrNull(),dataMain.currentBoard,listOffsetsBoards,dataMain.stateModal,screenHierarchyState,dataMain.openDialogEditing)
+                // Второй root
+                Board(viewModel, allBoards.filter { it.id == it.parent_id }.firstOrNull(),listOffsetsBoards)
             }
             Column(modifier = Modifier.align(Alignment.CenterVertically)) {
-
-                ColumnZ(allBoards.filter { it.id == it.parent_id }.firstOrNull().let { if (it != null) it.id else 0L } ,dataMain.viewModel,dataMain.currentBoard,listOffsetsBoards,dataMain.stateModal,screenHierarchyState,dataMain.openDialogEditing)
+                // Второй root
+                ColumnZ(viewModel, allBoards.filter { it.id == it.parent_id }.firstOrNull().let { if (it != null) it.id else 0L },listOffsetsBoards)
             }
         }
 
@@ -167,85 +156,69 @@ fun BuildingHierarchy(
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun ColumnZ(
-    idBoard: Long,
     viewModel: MainViewModel,
-    currentBoard: MutableState<Long>,
-    listOffsetsBoards: MutableList<boardBlock>,
-    stateModal: ModalBottomSheetState,
-    screenHierarchyState: MutableState<Screen>,
-    openDialogEditing: MutableState<Boolean>
-){
+    idBoard: Long,
+    listOffsetsBoards: MutableList<boardBlock>
+) {
     if (idBoard == 0L) return
-    // Найти всех детей и распарсить
     val allBoards: List<BoardModel> by viewModel.allBoards.observeAsState(emptyList())
-//    listBoards.value.filter { it }
 
     val endY = remember {
         mutableStateOf(0f)
     }
-    // как-то получить координату первой и последней
-
     val startY = remember {
         mutableStateOf(0f)
     }
-
-    allBoards.filter { it.parent_id == idBoard && it.id != it.parent_id}.forEachIndexed {index,it->
-
-        Row(modifier = Modifier
-            .background(Color.White)
-            .onGloballyPositioned {
-                if (index == allBoards.filter { it.parent_id == idBoard && it.id != it.parent_id }.size - 1) startY.value =
-                    it.positionInParent().y
-            }
-            .drawBehind {
-
-                if (allBoards.filter { it.parent_id == idBoard && it.id != it.parent_id }.size == 1) {
-
-                } else if (index == 0) {
-                    drawLine(
-                        start = Offset(x = 0f, y = 0f + size.height / 2),
-                        end = Offset(x = 0f, y = size.height),
-//                        end = Offset(x = 0f, y = startY.value + size.height / 2 + 2),
-                        color = Color.Gray,
-                        strokeWidth = 8F
-                    )
-                } else if (index == allBoards.filter { it.parent_id == idBoard && it.id != it.parent_id }.size - 1) {
-                    drawLine(
-                        start = Offset(x = 0f, y = 0f),
-                        end = Offset(x = 0f, y = size.height - size.height / 2),
-//                        end = Offset(x = 0f, y = startY.value + size.height / 2 + 2),
-                        color = Color.Gray,
-                        strokeWidth = 8F
-                    )
-
-                } else {
-                    drawLine(
-                        start = Offset(x = 0f, y = 0f),
-                        end = Offset(x = 0f, y = size.height),
-                        color = Color.Gray,
-                        strokeWidth = 8F
-                    )
+    allBoards.filter { it.parent_id == idBoard && it.id != it.parent_id }
+        .forEachIndexed { index, it ->
+            Row(modifier = Modifier
+                .background(Color.White)
+                .onGloballyPositioned {
+                    if (index == allBoards.filter { it.parent_id == idBoard && it.id != it.parent_id }.size - 1) startY.value =
+                        it.positionInParent().y
                 }
+                .drawBehind {
+                    if (allBoards.filter { it.parent_id == idBoard && it.id != it.parent_id }.size == 1) {
+                    } else if (index == 0) {
+                        drawLine(
+                            start = Offset(x = 0f, y = 0f + size.height / 2),
+                            end = Offset(x = 0f, y = size.height),
+//                        end = Offset(x = 0f, y = startY.value + size.height / 2 + 2),
+                            color = Color.Gray,
+                            strokeWidth = 8F
+                        )
+                    } else if (index == allBoards.filter { it.parent_id == idBoard && it.id != it.parent_id }.size - 1) {
+                        drawLine(
+                            start = Offset(x = 0f, y = 0f),
+                            end = Offset(x = 0f, y = size.height - size.height / 2),
+//                        end = Offset(x = 0f, y = startY.value + size.height / 2 + 2),
+                            color = Color.Gray,
+                            strokeWidth = 8F
+                        )
 
-            }
+                    } else {
+                        drawLine(
+                            start = Offset(x = 0f, y = 0f),
+                            end = Offset(x = 0f, y = size.height),
+                            color = Color.Gray,
+                            strokeWidth = 8F
+                        )
+                    }
+                }
             ) {
-            Column(modifier = Modifier
-                .align(Alignment.CenterVertically)
-) {
-
-                Board(viewModel,it,currentBoard,listOffsetsBoards,stateModal,screenHierarchyState,openDialogEditing)
-            }
-            Column(modifier = Modifier.align(Alignment.CenterVertically)
-) {
-                ColumnZ(it.id,viewModel,currentBoard,listOffsetsBoards,stateModal,screenHierarchyState,openDialogEditing)
-
+                Column(
+                    modifier = Modifier
+                        .align(Alignment.CenterVertically)
+                ) {
+                    Board(viewModel, it, listOffsetsBoards)
+                }
+                Column(
+                    modifier = Modifier.align(Alignment.CenterVertically)
+                ) {
+                    ColumnZ(viewModel, it.id, listOffsetsBoards)
+                }
             }
         }
-
-    }
-
-
-
 }
 
 data class boardBlock(var board:BoardModel?,var offset: MutableState<Offset>,var selected: MutableState<Boolean>,var size: MutableState<IntSize>)
@@ -257,253 +230,198 @@ data class boardBlock(var board:BoardModel?,var offset: MutableState<Offset>,var
 fun Board(
     viewModel: MainViewModel,
     board: BoardModel?,
-    currentBoard: MutableState<Long>,
-    listOffsetsBoards: MutableList<boardBlock>,
-    stateModal: ModalBottomSheetState,
-    screenHierarchyState: MutableState<Screen>,
-    openDialogEditing: MutableState<Boolean>
-
-){
+    listOffsetsBoards: MutableList<boardBlock>
+) {
+    val screenHierarchyState by viewModel.screenHierarchyState.collectAsState()
 
     val allBoards: List<BoardModel> by viewModel.allBoards.observeAsState(emptyList())
-    var offset = remember{ mutableStateOf(Offset(0f,0f)) }
-
+    var offset = remember { mutableStateOf(Offset(0f, 0f)) }
     val selected = remember { mutableStateOf(false) }
     val sizeState = remember { mutableStateOf(IntSize.Zero) }
-
     val scale = animateFloatAsState(if (selected.value) 1.2f else 1f)
-
     val offset_global = remember {
         mutableStateOf(Offset.Zero)
     }
-
-    val openDialogAdding = remember { mutableStateOf(false)  }
-
     val nameBoardStateAdding = remember { mutableStateOf(TextFieldValue()) }
     val nameBoardStateEditing = remember { mutableStateOf(TextFieldValue()) }
     val scope = rememberCoroutineScope()
 
-    AlertDialogAdding(openDialog = openDialogAdding, nameBoardState = nameBoardStateAdding, viewModel = viewModel,board)
-
-    AlertDialogEditing(openDialog = openDialogEditing, nameBoardState = nameBoardStateEditing, viewModel = viewModel,board,currentBoard,stateModal,scope)
-
-
+    AlertDialogAdding(viewModel)
+    AlertDialogEditing(viewModel, board)
 
     val requestDisallowInterceptTouchEvent = RequestDisallowInterceptTouchEvent()
     requestDisallowInterceptTouchEvent.invoke(true)
 
     var motionEvent by remember { mutableStateOf(Recomposer.State.Idle) }
-
-
-//    val pressed = remember {
-//        mutableStateOf(true)
-//    }
-    val pressuredState= remember {
+    val pressuredState = remember {
         mutableStateOf(1f)
     }
-
     val offsetDrag = remember {
         mutableStateOf(0f)
     }
-
-//    val intersectId = remember {
-//        mutableStateOf(0L)
-//    }
     var expanded by remember { mutableStateOf(false) }
 
-Column (modifier= Modifier
-
-    .offset { IntOffset(offset.value.x.toInt(), offset.value.y.toInt()) }
-
-
-    .scale(scale.value)
-    .padding(10.dp)
-
-    .border(BorderStroke(2.dp, Color.Black), shape = RoundedCornerShape(5.dp))
-
-    .padding(10.dp)
-
-    .drawBehind {
-
-        sizeState.value = IntSize(size.width.toInt(), size.height.toInt())
-        drawLine(
-            start = Offset(x = size.width + 20, y = size.height / 2),
-            end = Offset(x = size.width + 52, y = size.height / 2),
-            color = Color.Gray,
-            strokeWidth = 8F
-        )
-        drawLine(
-            start = Offset(x = -20f, y = size.height / 2),
-            end = Offset(x = -52f, y = size.height / 2),
-            color = Color.Gray,
-            strokeWidth = 8F
-        )
-    }
-    .onGloballyPositioned {
-        offset_global.value = it.positionInRoot()
-        if (!listOffsetsBoards.contains(
-                boardBlock(
-                    board,
-                    offset_global,
-                    selected,
-                    sizeState
+    Column(modifier = Modifier
+        .offset { IntOffset(offset.value.x.toInt(), offset.value.y.toInt()) }
+        .scale(scale.value)
+        .padding(10.dp)
+        .border(BorderStroke(2.dp, Color.Black), shape = RoundedCornerShape(5.dp))
+        .padding(10.dp)
+        .drawBehind {
+            sizeState.value = IntSize(size.width.toInt(), size.height.toInt())
+            drawLine(
+                start = Offset(x = size.width + 20, y = size.height / 2),
+                end = Offset(x = size.width + 52, y = size.height / 2),
+                color = Color.Gray,
+                strokeWidth = 8F
+            )
+            drawLine(
+                start = Offset(x = -20f, y = size.height / 2),
+                end = Offset(x = -52f, y = size.height / 2),
+                color = Color.Gray,
+                strokeWidth = 8F
+            )
+        }
+        .onGloballyPositioned {
+            offset_global.value = it.positionInRoot()
+            if (!listOffsetsBoards.contains(
+                    boardBlock(
+                        board,
+                        offset_global,
+                        selected,
+                        sizeState
+                    )
                 )
             )
-        )
-            listOffsetsBoards.add(boardBlock(board, offset_global, selected, sizeState))
-    }
-    .pointerInput(Unit) {
-        detectDragGestures(
-            onDrag = { pic, offset_ ->
-                offset.value += offset_
-
-
-                listOffsetsBoards.forEach {
-                    if (it.offset != offset_global && it.board != null) {
-                        if (it.offset.value.x + it.size.value.width / 2 >= offset_global.value.x && it.offset.value.x - it.size.value.width / 2 <= offset_global.value.x &&
-                            it.offset.value.y + it.size.value.height / 2 >= offset_global.value.y && it.offset.value.y - it.size.value.height / 2 <= offset_global.value.y &&
-                            (listOffsetsBoards.filter { a -> a.selected.value == true }.size == 0
+                listOffsetsBoards.add(boardBlock(board, offset_global, selected, sizeState))
+        }
+        .pointerInput(Unit) {
+            detectDragGestures(
+                onDrag = { pic, offset_ ->
+                    offset.value += offset_
+                    listOffsetsBoards.forEach {
+                        if (it.offset != offset_global && it.board != null) {
+                            if (it.offset.value.x + it.size.value.width / 2 >= offset_global.value.x && it.offset.value.x - it.size.value.width / 2 <= offset_global.value.x &&
+                                it.offset.value.y + it.size.value.height / 2 >= offset_global.value.y && it.offset.value.y - it.size.value.height / 2 <= offset_global.value.y &&
+                                (listOffsetsBoards.filter { a -> a.selected.value == true }.size == 0
 //                                    || listOffsetsBoards.filter { a-> a.selected.value == true && a.board.id ==  } == 1 11111111111111&& it.board != a.board
-                                    || listOffsetsBoards.filter { a ->
-                                a.selected.value == true && it.board == a.board
-                                        && it.board.let { if (it != null) it.id else 0L } == a.board.let { if (it != null) it.id else -1L }
-                            }.size == 1
-                                    )
+                                        || listOffsetsBoards.filter { a ->
+                                    a.selected.value == true && it.board == a.board
+                                            && it.board.let { if (it != null) it.id else 0L } == a.board.let { if (it != null) it.id else -1L }
+                                }.size == 1
+                                        )
 //                            && board?.id != board?.parent_id
-                            && !getAllParentsBoardIds(
-                                it.board,
-                                allBoards
-                            ).contains(board.let { if (it != null) it.id else 0L })
-                        // Если it имеет parent - board, то нет
-                        ) {
-
-                            // Вызвать эффект
-                            // Обработать если отпущено
-
+                                && !getAllParentsBoardIds(
+                                    it.board,
+                                    allBoards
+                                ).contains(board.let { if (it != null) it.id else 0L })
+                            // Если it имеет parent - board, то нет
+                            ) {
 //                            intersectId.value = it.board.let { if (it != null) it.id else 0L }
 //                            println("***intersectId=${intersectId.value}")
-                            it.selected.value = true
+                                it.selected.value = true
 //                            return@forEach
-
-
-                        } else {
+                            } else {
 //                            println("**${listOffsetsBoards.filter { a -> a.selected.value == true && it.board != a.board }.size} and ${it.size} and ${it.board?.name}")
 //                            intersectId.value = 0L
-                            it.selected.value = false
+                                it.selected.value = false
+                            }
                         }
                     }
-                }
 //                println("ONDRAG=${offset}")
 
-            },
-            onDragEnd = {
+                },
+                onDragEnd = {
 //                println("END")
-                // Переместить с заменой parent
+                    // Переместить с заменой parent
 //                println(listOffsetsBoards.toString())
-
-                if (listOffsetsBoards.filter { it.selected.value == true }.size >= 1) {
-                    // Доска не может быть перемещена к своим детям
-//                    println(
-//                        "${board} and intersectionId=${
-//                            listOffsetsBoards
-//                                .filter { it.selected.value == true }
-//                                .lastOrNull()!!.board!!.id
-//                        }"
-//                    )
-
-                    viewModel.updateBoard(
-                        BoardModel(
-                            board.let { if (it != null) it.id else 0 },
-                            board?.name.orEmpty(),
-                            board?.date.orEmpty(),
-                            listOffsetsBoards
-                                .filter { it.selected.value == true }
-                                .lastOrNull()!!.board!!.id
+                    if (listOffsetsBoards.filter { it.selected.value == true }.size >= 1) {
+                        // Доска не может быть перемещена к своим детям
+                        viewModel.updateBoard(
+                            BoardModel(
+                                board.let { if (it != null) it.id else 0 },
+                                board?.name.orEmpty(),
+                                board?.date.orEmpty(),
+                                listOffsetsBoards
+                                    .filter { it.selected.value == true }
+                                    .lastOrNull()!!.board!!.id
+                            )
                         )
-                    )
-                    if (screenHierarchyState.value == Screen.Hierarchy) {
-                        screenHierarchyState.value = Screen.Hierarchy2
+                        if (screenHierarchyState == Screen.Hierarchy) {
+                            viewModel.setScreenHierarchyState(Screen.Hierarchy2)
+                        } else {
+                            viewModel.setScreenHierarchyState(Screen.Hierarchy)
+                        }
                     } else {
-                        screenHierarchyState.value = Screen.Hierarchy
+                        // Сбросить назад
+                        if (screenHierarchyState == Screen.Hierarchy) {
+                            viewModel.setScreenHierarchyState(Screen.Hierarchy2)
+                        } else {
+                            viewModel.setScreenHierarchyState(Screen.Hierarchy)
+                        }
                     }
-                } else {
-                    // Сбросить назад
-                    if (screenHierarchyState.value == Screen.Hierarchy) {
-                        screenHierarchyState.value = Screen.Hierarchy2
-                    } else {
-                        screenHierarchyState.value = Screen.Hierarchy
-                    }
-                }
 
-            })
-
-    }
-    .combinedClickable(
-        onClick = {
-            currentBoard.value = board!!.id
-        },
-        onLongClick = {
-            currentBoard.value = board!!.id
-            expanded = true
-        },
-    )
-    .padding(15.dp)
-
-
-){
-    Icon(
-        modifier = Modifier
-            .align(Alignment.CenterHorizontally)
-        ,
-        imageVector = ImageVector.vectorResource(id = R.drawable.ic_baseline_bookmark_24),
-        contentDescription = "",
-        tint = Color.Red,
+                })
+        }
+        .combinedClickable(
+            onClick = {
+                viewModel.setCurrentBoardId(board!!.id)
+            },
+            onLongClick = {
+                viewModel.setCurrentBoardId(board!!.id)
+                expanded = true
+            },
         )
-    Text(
-        modifier = Modifier.align(Alignment.CenterHorizontally),
-        text = board?.name.orEmpty() ,
-        color=Color.Black)
+        .padding(15.dp)
 
 
-    DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false  },modifier = Modifier
     ) {
-
-        DropdownMenuItem(onClick = {
-            expanded = false
-            openDialogAdding.value = true
-
-        }){
-            Text("Добавить")
-        }
-        DropdownMenuItem(onClick = {
-            expanded = false
-            openDialogEditing.value = true
-        }){
-            Text(text = "Редактировать")
-        }
-        if (board.let { if(it!=null) it.id else 1L} != 1L){
+        Icon(
+            modifier = Modifier
+                .align(Alignment.CenterHorizontally),
+            imageVector = ImageVector.vectorResource(id = R.drawable.ic_baseline_bookmark_24),
+            contentDescription = "",
+            tint = Color.Red,
+        )
+        Text(
+            modifier = Modifier.align(Alignment.CenterHorizontally),
+            text = board?.name.orEmpty(),
+            color = Color.Black
+        )
+        DropdownMenu(
+            expanded = expanded, onDismissRequest = { expanded = false }, modifier = Modifier
+        ) {
             DropdownMenuItem(onClick = {
-                if (allBoards.filter { it.id == board?.id }.first().let { if(it != null) it.id else 1L } != 1L){
-                    viewModel.deleteBoard(allBoards.filter { it.id == board?.id }.first())
-                }
                 expanded = false
-            }){
-                Text(text = "Удалить")
+                viewModel.setOpenDialogAdding(true)
+            }) {
+                Text("Добавить")
+            }
+            DropdownMenuItem(onClick = {
+                expanded = false
+                viewModel.setOpenDialogEditing(true)
+            }) {
+                Text(text = "Редактировать")
+            }
+            if (board.let { if (it != null) it.id else 1L } != 1L) {
+                DropdownMenuItem(onClick = {
+                    if (allBoards.filter { it.id == board?.id }.first()
+                            .let { if (it != null) it.id else 1L } != 1L
+                    ) {
+                        viewModel.deleteBoard(allBoards.filter { it.id == board?.id }.first())
+                    }
+                    expanded = false
+                }) {
+                    Text(text = "Удалить")
+                }
             }
         }
-
-
     }
-
-}
-
-
 }
 
 
 fun getAllParentsBoardIds(board:BoardModel?,listBoard: List<BoardModel>): List<Long>{
     var parentsBoard = mutableListOf<Long>()
-
     var parentBoard : BoardModel? = board
     parentsBoard.add(parentBoard!!.id)
     var i = 0
@@ -513,7 +431,6 @@ fun getAllParentsBoardIds(board:BoardModel?,listBoard: List<BoardModel>): List<L
         if (parentBoard!!.id == parentBoard!!.parent_id) break
         i++
     }
-
     return parentsBoard
 }
 

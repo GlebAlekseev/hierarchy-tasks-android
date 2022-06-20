@@ -29,7 +29,6 @@ import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.PopupProperties
-import com.example.project_am_manager.DataMain
 import com.example.project_am_manager.MainActivity
 import com.example.project_am_manager.R
 import com.google.accompanist.pager.*
@@ -45,53 +44,51 @@ import java.text.SimpleDateFormat
 @OptIn(ExperimentalPagerApi::class, ExperimentalMaterialApi::class)
 @Composable
 fun HomeScreen(
-    dataMain: DataMain
+    viewModel: MainViewModel
 ) {
-    val allBoards: List<BoardModel> by dataMain.viewModel.allBoards.observeAsState(emptyList())
-    val allTasks: List<TaskModel> by dataMain.viewModel.allTasks.observeAsState(emptyList())
+    val allBoards: List<BoardModel> by viewModel.allBoards.observeAsState(emptyList())
+    val allTasks: List<TaskModel> by viewModel.allTasks.observeAsState(emptyList())
     val scope = rememberCoroutineScope()
-
-//    BackButtonAction {
-//        TManagerRouter.goBack()
-//    }
-    println("WTFFF")
+    val pagerState by viewModel.pagerState.collectAsState()
+    val parentBoardId by viewModel.parentBoardId.collectAsState()
 
     Column(modifier = Modifier.fillMaxSize()) {
         ScrollableTabRow(
-            selectedTabIndex = dataMain.pagerState.currentPage,
+            selectedTabIndex = pagerState.currentPage,
             indicator = { tabPositions ->
                 TabRowDefaults.Indicator(
-                    Modifier.pagerTabIndicatorOffset(dataMain.pagerState, tabPositions)
+                    Modifier.pagerTabIndicatorOffset(pagerState, tabPositions)
                 )
             },
             ) {
                 allBoards.filter { a ->
-                    (a.parent_id == dataMain.boardParentId.value && !allTasks.filter { it.parent_id == a.id }
+                    (a.parent_id == parentBoardId && !allTasks.filter { it.parent_id == a.id }
                         .isNullOrEmpty())
                 }.forEachIndexed { index, board ->
                     Tab(
                         text = {
                             Text(text = board.name, modifier = Modifier.padding(top = 10.dp, bottom = 10.dp))
                                },
-                        selected = dataMain.pagerState.currentPage == index,
+                        selected = pagerState.currentPage == index,
                         onClick = {
                             scope.launch {
-                                dataMain.pagerState.animateScrollToPage(index)
-
+                                pagerState.animateScrollToPage(index)
                             }
                         }, selectedContentColor = Color.Black, unselectedContentColor = Color.LightGray)
                 }
         }
-        HorizontalPager(count = allBoards.filter {a->  (a.parent_id == dataMain.boardParentId.value && !allTasks.filter{ it.parent_id == a.id } .isNullOrEmpty())  }.size, state = dataMain.pagerState, modifier = Modifier.fillMaxSize()) { page ->
-            dataMain.currentBoard.value = allBoards.filter {a->  (a.parent_id == dataMain.boardParentId.value && !allTasks.filter{ it.parent_id == a.id } .isNullOrEmpty()) }.elementAtOrNull(page).let { if (it != null) it.id else 1 }
+        HorizontalPager(count = allBoards.filter {a->  (a.parent_id == parentBoardId && !allTasks.filter{ it.parent_id == a.id } .isNullOrEmpty())  }.size, state = pagerState, modifier = Modifier.fillMaxSize()) { page ->
+//            viewModel.setCurrentBoardId(allBoards.filter {a->  (a.parent_id == parentBoardId && !allTasks.filter{ it.parent_id == a.id } .isNullOrEmpty()) }.elementAtOrNull(page).let { if (it != null) it.id else 1 })
+//            viewModel.setCurrentPagerBoardId(allBoards.filter {a->  (a.parent_id == parentBoardId && !allTasks.filter{ it.parent_id == a.id } .isNullOrEmpty()) }.elementAtOrNull(page).let { if (it != null) it.id else 1 })
             LazyColumn(modifier = Modifier.fillMaxHeight()){
                 itemsIndexed(items=allTasks.filter {
-                    it.parent_id == allBoards.filter {a->  (a.parent_id == dataMain.boardParentId.value && !allTasks.filter{ it.parent_id == a.id } .isNullOrEmpty()) }.elementAtOrNull(page).let { if (it != null) it.id else 1 } },
+                    it.parent_id == allBoards.filter {a->  (a.parent_id == parentBoardId && !allTasks.filter{ it.parent_id == a.id } .isNullOrEmpty()) }.elementAtOrNull(page).let { if (it != null) it.id else 1 } },
                     itemContent = { index,item->
-                    ToastContent(dataMain,item)
+                    ToastContent(viewModel,item)
 //                        dataMain.currentBoard.value = allBoards.filter {a->  (a.parent_id == dataMain.boardParentId.value && !allTasks.filter{ it.parent_id == a.id } .isNullOrEmpty()) }.elementAtOrNull(page).let { if (it != null) it.id else 1 }
-                        if (index == allTasks.filter {
-                                it.parent_id == allBoards.filter {a->  (a.parent_id == dataMain.boardParentId.value && !allTasks.filter{ it.parent_id == a.id } .isNullOrEmpty())  }.get(page).id }.size-1){
+                        val count = allTasks.filter {
+                            it.parent_id == allBoards.filter {a->  (a.parent_id == parentBoardId && !allTasks.filter{ it.parent_id == a.id } .isNullOrEmpty()) }.elementAtOrNull(page).let { if (it != null) it.id else 1 } }.size
+                        if (index == count-1){
                             Spacer(modifier = Modifier.fillMaxWidth().height(60.dp))
                         }
                 })
@@ -102,25 +99,24 @@ fun HomeScreen(
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalPagerApi::class)
 @Composable
-fun ToastContent(dataMain: DataMain,item: TaskModel) {
+fun ToastContent(viewModel: MainViewModel,item: TaskModel) {
     val shape = RoundedCornerShape(4.dp)
     val context = LocalContext.current
     var expanded by remember { mutableStateOf(false) }
+    val currentBoardId by viewModel.currentBoardId.collectAsState()
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 8.dp,horizontal = 15.dp)
             .clip(shape)
             .background(Color(android.graphics.Color.parseColor("#F0F0F0")))
-
             .height(100.dp)
             .combinedClickable(
                 onClick = {
                     val intent = Intent(context, TaskActivity::class.java)
                     intent.putExtra(MainActivity.TRANSMITTED_ID, item.id)
-                    intent.putExtra(MainActivity.CURRENT_BOARD, dataMain.currentBoard.value)
+                    intent.putExtra(MainActivity.CURRENT_BOARD, currentBoardId)
                     context.startActivity(intent)
-
                 },
                 onLongClick = {
                     expanded = if (expanded) false else true
@@ -152,18 +148,15 @@ fun ToastContent(dataMain: DataMain,item: TaskModel) {
         DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false  },modifier = Modifier
         ) {
             DropdownMenuItem(onClick = {
-                dataMain.viewModel.deleteTask(item)
+                viewModel.deleteTask(item)
                 expanded = false
             },
             modifier = Modifier
                 .clip(shape)
                 .padding(0.dp)
-
                 ){
                 Text("Удалить", color = Color.Black)
             }
         }
-        
     }
-
 }

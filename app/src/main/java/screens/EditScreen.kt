@@ -48,11 +48,11 @@ fun EditScreen(
         TextField(
             value = nameTextFieldEdit,
             onValueChange ={viewModel.setNameTextFieldEdit(it)},
-            textStyle = TextStyle(Color.Black, fontSize = 22.sp, fontWeight = FontWeight.W400),
+            textStyle = TextStyle(Color(70, 169, 240), fontSize = 22.sp, fontWeight = FontWeight.W400),
             placeholder = {
                 Text(text = "Название", fontSize = 22.sp, fontWeight = FontWeight.W400, color = Color.LightGray)
             },
-            colors = TextFieldDefaults.textFieldColors(backgroundColor = Color.White, unfocusedIndicatorColor = Color.Unspecified, cursorColor = Color.Black),
+            colors = TextFieldDefaults.textFieldColors(backgroundColor = Color.White, unfocusedIndicatorColor = Color.Unspecified, cursorColor = Color(70, 169, 240)),
             modifier = Modifier
                 .fillMaxWidth()
                 .background(Color.White)
@@ -77,8 +77,8 @@ fun EditScreen(
                     text = allBoards.filter { it.id == transmittedParentId }.firstOrNull()
                     .let { if(it != null) it.name else "Error" })
                 Icon(imageVector = ImageVector.vectorResource(id = R.drawable.ic_baseline_down_24), contentDescription = "", modifier = Modifier
-                    .padding(PaddingValues(start = 8.dp, top = 3.dp))
-                    .size(12.dp)
+                    .padding(PaddingValues(start = 8.dp, top = 5.dp))
+                    .size(14.dp)
                     .alpha(0.7f)
                     , tint = Color.Black)
             }
@@ -92,6 +92,13 @@ fun EditScreen(
                 )
                 Text(text = currentDate, textAlign = TextAlign.Right, fontWeight = FontWeight.W200, fontSize = 14.sp, color = Color.Black)
             }
+        }
+        Row() {
+            Text(
+                text = "Символов: " + descriptionTextFieldEdit.length, color = Color.Black,
+                modifier = Modifier
+                    .padding(12.dp)
+            )
         }
         TextField(
             value = descriptionTextFieldEdit,

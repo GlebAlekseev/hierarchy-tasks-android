@@ -1,27 +1,5 @@
 package com.himanshoe.kalendar.ui.firey
-/*
-* MIT License
-*
-* Copyright (c) 2022 Himanshu Singh
-*
-* Permission is hereby granted, free of charge, to any person obtaining a copy
-* of this software and associated documentation files (the "Software"), to deal
-* in the Software without restriction, including without limitation the rights
-* to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-* copies of the Software, and to permit persons to whom the Software is
-* furnished to do so, subject to the following conditions:
-*
-* The above copyright notice and this permission notice shall be included in all
-* copies or substantial portions of the Software.
-*
-* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-* IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-* AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-* LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-* OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-* SOFTWARE.
-*/
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
@@ -41,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextAlign
@@ -57,7 +36,14 @@ internal fun KalendarHeader(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color.Black)
+            .background(
+                Brush.linearGradient(
+                    colors = listOf(
+                        Color(62, 125, 250), //purple-blue grad
+                        Color(134, 124, 247)
+                    )
+                )
+            )
             ,
         horizontalArrangement = Arrangement.SpaceEvenly,
         verticalAlignment = Alignment.CenterVertically,
@@ -73,7 +59,7 @@ internal fun KalendarHeader(
             modifier = Modifier
                 .padding(Grid.Two),
             style = MaterialTheme.typography.h6,
-            text = text,
+            text = ruLocaleMonths(text),
             textAlign = TextAlign.Center,
             color=Color.White
         )
@@ -84,6 +70,25 @@ internal fun KalendarHeader(
             kalendarSelector = kalendarSelector
         )
     }
+}
+fun ruLocaleMonths(name: String): String{
+    val array = name.split(" ")
+    when(array[0]){
+        "June" -> return "Июнь " + array[1]
+        "July" -> return "Июль " + array[1]
+        "August" -> return "Август " + array[1]
+        "September" -> return "Сентябрь " + array[1]
+        "October" -> return "Октябрь " + array[1]
+        "November" -> return "Ноябрь " + array[1]
+        "December" -> return "Декабрь  " + array[1]
+        "January" -> return "Январь " + array[1]
+        "February" -> return "Февраль " + array[1]
+        "March" -> return "Март " + array[1]
+        "April" -> return "Апрель " + array[1]
+        "May" -> return "Май " + array[1]
+        else -> return "Unknown"
+    }
+
 }
 
 @Composable

@@ -22,6 +22,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -67,7 +68,7 @@ fun HomeScreen(
                 }.forEachIndexed { index, board ->
                     Tab(
                         text = {
-                            Text(text = board.name, modifier = Modifier.padding(top = 10.dp, bottom = 10.dp))
+                            Text(text = board.name, modifier = Modifier.padding(top = 10.dp, bottom = 10.dp), color = Color(53, 156, 252))
                                },
                         selected = pagerState.currentPage == index,
                         onClick = {
@@ -109,6 +110,7 @@ fun ToastContent(viewModel: MainViewModel,item: TaskModel) {
             .fillMaxWidth()
             .padding(vertical = 8.dp,horizontal = 15.dp)
             .clip(shape)
+            .border(1.dp,Color.Black,shape = RoundedCornerShape(1.dp))
             .background(Color(android.graphics.Color.parseColor("#F0F0F0")))
             .height(100.dp)
             .combinedClickable(
@@ -124,7 +126,7 @@ fun ToastContent(viewModel: MainViewModel,item: TaskModel) {
             )
     ) {
         Column() {
-            Text(text = item.name, color = Color.Black, fontSize = 18.sp, fontWeight = FontWeight.W500, modifier = Modifier.padding(10.dp),
+            Text(text = item.name, color = Color(101, 160, 247), fontSize = 18.sp, fontWeight = FontWeight.W500, modifier = Modifier.padding(10.dp),
             maxLines = 1, overflow = TextOverflow.Ellipsis)
             Text(text = item.description,color=Color.DarkGray, fontWeight = FontWeight.W400, modifier = Modifier
                 .alpha(0.8f)
@@ -155,7 +157,7 @@ fun ToastContent(viewModel: MainViewModel,item: TaskModel) {
                 .clip(shape)
                 .padding(0.dp)
                 ){
-                Text("Удалить", color = Color.Black)
+                Text("Удалить", color = Color(53, 156, 252))
             }
         }
     }

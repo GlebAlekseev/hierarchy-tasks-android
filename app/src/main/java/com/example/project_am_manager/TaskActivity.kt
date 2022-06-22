@@ -23,10 +23,12 @@ class TaskActivity : ComponentActivity() {
         val id:Long = intent.getLongExtra(MainActivity.TRANSMITTED_ID,0).toLong()
         val id_current_board:Long = intent.getLongExtra(MainActivity.CURRENT_BOARD,0).toLong()
 
+        if (savedInstanceState == null){
+            viewModel.setTransmittedId(id)
+            if (viewModel.transmittedParentId.value == 0L)
+                viewModel.setTransmittedParentId(id_current_board)
 
-        viewModel.setTransmittedId(id)
-        if (viewModel.transmittedParentId.value == 0L)
-            viewModel.setTransmittedParentId(id_current_board)
+        }
 
         setContent {
             TaskApp(viewModel)

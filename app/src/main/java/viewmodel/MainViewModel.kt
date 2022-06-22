@@ -103,22 +103,12 @@ class MainViewModel(private val repositoryTask: RepositoryTask,private val repos
         }
     }
 
-
-    ////////////////////////////////////
-    // View Saveable
-
-    // TaskActivity
-
     private val _openDialogSave = MutableStateFlow(false)
     val openDialogSave: StateFlow<Boolean>
         get() = _openDialogSave
     fun setOpenDialogSave(value:Boolean){
         _openDialogSave.value = value
     }
-
-
-//    val id:Long = intent.getLongExtra(MainActivity.TRANSMITTED_ID,0).toLong()
-//    val id_current_board:Long = intent.getLongExtra(MainActivity.CURRENT_BOARD,0).toLong()
 
     private val _transmittedId = MutableStateFlow(0L)
     val transmittedId: StateFlow<Long>
@@ -142,12 +132,6 @@ class MainViewModel(private val repositoryTask: RepositoryTask,private val repos
         _transmittedParentId.value = value
     }
 
-
-
-
-
-
-
     private val _currentBoardId = MutableStateFlow(0L)
     val currentBoardId: StateFlow<Long>
         get() = _currentBoardId
@@ -156,16 +140,6 @@ class MainViewModel(private val repositoryTask: RepositoryTask,private val repos
         setParentBoardId(allBoards.value?.filter { it.id == _currentBoardId.value }!!.lastOrNull()
             .let { if (it != null) it.parent_id else 1 })
     }
-
-
-//
-//    val stateModal = rememberModalBottomSheetState(ModalBottomSheetValue.Hidden)
-//    val scaffoldState: ScaffoldState = rememberScaffoldState()
-//    val scope = rememberCoroutineScope()
-//    val nameState = remember { mutableStateOf(TextFieldValue()) }
-//    var currentDate: String = SimpleDateFormat("dd:MM:yyyy hh:mm:ss").format(Date())
-//    val descriptionState = remember { mutableStateOf(TextFieldValue()) }
-//    val parentBoardState = remember { mutableStateOf(idCurrentBoard) }
 
     private val _nameTextFieldEdit = MutableStateFlow("")
     val nameTextFieldEdit: StateFlow<String>
@@ -209,28 +183,6 @@ class MainViewModel(private val repositoryTask: RepositoryTask,private val repos
     @OptIn(ExperimentalMaterialApi::class, ExperimentalFoundationApi::class)
     val relocationRequester: StateFlow<BringIntoViewRequester>
         get() = _relocationRequester
-
-    ////////////////////
-    // MainActivity
-
-    //    val data = DataMain(
-//        scaffoldState = rememberScaffoldState(),
-//        state = rememberModalBottomSheetState(ModalBottomSheetValue.Hidden),
-//        scope = rememberCoroutineScope(),
-//        currentBoard = remember { mutableStateOf(1L) },
-//        boardParentId = remember { mutableStateOf(1L) },
-//        viewModel = viewModel,
-//        pagerState = rememberPagerState(),
-//        index_toAnimateGo = remember {mutableStateOf(1)},
-//        stateModal = rememberModalBottomSheetState(ModalBottomSheetValue.Hidden),
-//        openDialogEditing = remember { mutableStateOf(false)  },
-//        scale_content = remember { mutableStateOf(0.4f) },
-//        offset_content = remember { mutableStateOf(Offset(0f,0f)) },
-//        isSelected = remember { mutableStateOf(false)},
-//        screenState = TManagerRouter.currentScreen,
-//        navController = rememberAnimatedNavController(),
-//        selectedItem = remember { mutableStateOf(0) }
-//    )
 
 
     private val _indexAnimateTarget = MutableStateFlow(0)
@@ -406,15 +358,6 @@ class MainViewModel(private val repositoryTask: RepositoryTask,private val repos
     fun setNameBoardAlertDialogEditing(value:String){
         _nameBoardAlertDialogEditing.value = value
     }
-
-
-
-//    private val _currentPagerBoardId = MutableStateFlow(1L)
-//    val currentPagerBoardId: StateFlow<Long>
-//        get() = _currentPagerBoardId
-//    fun setCurrentPagerBoardId(value:Long){
-//        _currentPagerBoardId.value = value
-//    }
 
 
 }

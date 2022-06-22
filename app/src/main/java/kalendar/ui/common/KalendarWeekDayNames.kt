@@ -52,11 +52,25 @@ internal fun KalendarWeekDayNames(kalendarKonfig: KalendarKonfig) {
                 KalendarWeekDay(
                     modifier = Modifier
                         .requiredWidth(width)
+                        .alpha(0.7F)
                         .wrapContentHeight(),
-                    text = weekDay.subSequence(ZERO, kalendarKonfig.weekCharacters).toString()
+                    text = ruLocale(weekDay.subSequence(ZERO, kalendarKonfig.weekCharacters).toString())
                 )
             }
         }
+    }
+}
+
+fun ruLocale(name: String): String{
+    when(name){
+        "Sun" -> return "ВС"
+        "Mon" -> return "ПН"
+        "Tue" -> return "ВТ"
+        "Wed" -> return "СР"
+        "Thu" -> return "ЧТ"
+        "Fri" -> return "ПТ"
+        "Sat" -> return "СБ"
+        else -> return "Unknown"
     }
 }
 

@@ -285,12 +285,9 @@ fun GetBottomNavigationComponent(
                         modifier = Modifier
                             .drawBehind {
                                 if (selectedItem == it.index) {
-                                    drawRoundRect(
-                                        Color(android.graphics.Color.parseColor("#F0F0F0")),
-                                        Offset(-size.width, -size.height * 0.4f / 2),
-                                        Size(size.width * 3f, size.height * 1.4f),
-                                        cornerRadius = CornerRadius(50f, 50f)
-                                    )
+                                        drawRoundRect(Color(135, 138, 245), Offset(-size.width,-size.height*0.4f/2), Size(size.width*3f,size.height*1.4f),
+                                            cornerRadius = CornerRadius(50f,50f), alpha = 0.1f)
+
                                 }
                             }
                     )

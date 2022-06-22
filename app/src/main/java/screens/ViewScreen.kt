@@ -31,7 +31,7 @@ fun ViewScreen(
 
     val allBoards: List<BoardModel> by viewModel.allBoards.observeAsState(emptyList())
     Column(modifier = Modifier.fillMaxSize()) {
-        Text(text = nameTextFieldEdit, fontSize = 22.sp, fontWeight = FontWeight.W400, color = Color.Black, modifier = Modifier
+        Text(text = nameTextFieldEdit, fontSize = 22.sp, fontWeight = FontWeight.W400, color = Color(70, 169, 240), modifier = Modifier
             .padding(16.dp)
             .padding(horizontal = 32.dp)
         )
@@ -58,6 +58,14 @@ fun ViewScreen(
                 )
                 Text(text = currentDate, textAlign = TextAlign.Right, fontWeight = FontWeight.W200, fontSize = 14.sp, color = Color.Black)
             }
+
+        }
+        Row() {
+            Text(
+                text = "Символов: " + descriptionTextFieldEdit.length, color = Color.Black,
+                modifier = Modifier
+                    .padding(12.dp)
+            )
         }
         Text(text = descriptionTextFieldEdit, fontSize = 16.sp, fontWeight = FontWeight.W300, color = Color.DarkGray,
         modifier = Modifier

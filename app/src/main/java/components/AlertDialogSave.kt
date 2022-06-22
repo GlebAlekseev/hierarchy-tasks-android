@@ -1,11 +1,21 @@
 package components
 
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CutCornerShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.AlertDialog
 import androidx.compose.material.Button
+import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Text
 import androidx.compose.runtime.*
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.unit.dp
 import domain.model.TaskModel
 import com.example.project_am_manager.TaskActivity
 import viewmodel.MainViewModel
@@ -28,7 +38,10 @@ fun AlertDialogSave(viewModel: MainViewModel) {
                 viewModel.setOpenDialogSave(false)
             },
             confirmButton = {
-                Button(
+                Button(modifier = Modifier
+                    .padding(horizontal = 15.dp)
+                    .border(1.5f.dp,Color.Black,shape = RoundedCornerShape(2.dp))
+                    .width(130.dp),
                     onClick = {
                         viewModel.setOpenDialogSave(false)
                         if (transmittedId == 0L) {
@@ -56,17 +69,19 @@ fun AlertDialogSave(viewModel: MainViewModel) {
                         }
                         context.finish()
                     }) {
-                    Text(if (transmittedId == 0L) "Добавить" else "Сохранить")
+                    Text(if (transmittedId == 0L) "Добавить" else "Сохранить", style = TextStyle(Color(70, 169, 240)))
                 }
             },
             dismissButton = {
-                Button(
-
+                Button(modifier = Modifier
+                    .offset(9.0f.dp, 0.dp)
+                    .border(1.5f.dp,Color.Black,shape = RoundedCornerShape(2.dp))
+                    .width(130.dp),
                     onClick = {
                         viewModel.setOpenDialogSave(false)
                         context.finish()
                     }) {
-                    Text("Игнорировать")
+                    Text("Отменить", style = TextStyle(Color(70, 169, 240)))
                 }
             }
         )

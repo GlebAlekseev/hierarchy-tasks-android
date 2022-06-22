@@ -38,6 +38,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.LocalViewConfiguration
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.DpOffset
@@ -184,7 +185,7 @@ fun ColumnZ(
                             start = Offset(x = 0f, y = 0f + size.height / 2),
                             end = Offset(x = 0f, y = size.height),
 //                        end = Offset(x = 0f, y = startY.value + size.height / 2 + 2),
-                            color = Color.Gray,
+                            color = Color(53, 146, 252),
                             strokeWidth = 8F
                         )
                     } else if (index == allBoards.filter { it.parent_id == idBoard && it.id != it.parent_id }.size - 1) {
@@ -192,7 +193,7 @@ fun ColumnZ(
                             start = Offset(x = 0f, y = 0f),
                             end = Offset(x = 0f, y = size.height - size.height / 2),
 //                        end = Offset(x = 0f, y = startY.value + size.height / 2 + 2),
-                            color = Color.Gray,
+                            color = Color(53, 146, 252),
                             strokeWidth = 8F
                         )
 
@@ -200,7 +201,7 @@ fun ColumnZ(
                         drawLine(
                             start = Offset(x = 0f, y = 0f),
                             end = Offset(x = 0f, y = size.height),
-                            color = Color.Gray,
+                            color = Color(53, 146, 252),
                             strokeWidth = 8F
                         )
                     }
@@ -265,20 +266,20 @@ fun Board(
         .offset { IntOffset(offset.value.x.toInt(), offset.value.y.toInt()) }
         .scale(scale.value)
         .padding(10.dp)
-        .border(BorderStroke(2.dp, Color.Black), shape = RoundedCornerShape(5.dp))
+        .border(BorderStroke(2.dp, Color(0, 0, 0)), shape = RoundedCornerShape(40.dp))
         .padding(10.dp)
         .drawBehind {
             sizeState.value = IntSize(size.width.toInt(), size.height.toInt())
             drawLine(
                 start = Offset(x = size.width + 20, y = size.height / 2),
                 end = Offset(x = size.width + 52, y = size.height / 2),
-                color = Color.Gray,
+                color = Color(53, 146, 252),
                 strokeWidth = 8F
             )
             drawLine(
                 start = Offset(x = -20f, y = size.height / 2),
                 end = Offset(x = -52f, y = size.height / 2),
-                color = Color.Gray,
+                color = Color(53, 146, 252),
                 strokeWidth = 8F
             )
         }
@@ -381,7 +382,7 @@ fun Board(
                 .align(Alignment.CenterHorizontally),
             imageVector = ImageVector.vectorResource(id = R.drawable.ic_baseline_bookmark_24),
             contentDescription = "",
-            tint = Color.Red,
+            tint = Color(53, 156, 252),
         )
         Text(
             modifier = Modifier.align(Alignment.CenterHorizontally),
@@ -395,13 +396,13 @@ fun Board(
                 expanded = false
                 viewModel.setOpenDialogAdding(true)
             }) {
-                Text("Добавить")
+                Text("Добавить", style = TextStyle(Color(53, 156, 252)))
             }
             DropdownMenuItem(onClick = {
                 expanded = false
                 viewModel.setOpenDialogEditing(true)
             }) {
-                Text(text = "Редактировать")
+                Text(text = "Редактировать", style = TextStyle(Color(53, 156, 252)))
             }
             if (board.let { if (it != null) it.id else 1L } != 1L) {
                 DropdownMenuItem(onClick = {
@@ -412,7 +413,7 @@ fun Board(
                     }
                     expanded = false
                 }) {
-                    Text(text = "Удалить")
+                    Text(text = "Удалить", style = TextStyle(Color(53, 156, 252)))
                 }
             }
         }

@@ -2,10 +2,7 @@ package components.topbar
 
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.Text
@@ -14,6 +11,7 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
@@ -34,10 +32,19 @@ fun TopTaskAppBar(
     val localBackPressed = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
     Row(modifier = Modifier
         .fillMaxWidth()
-        .background(Color.Black)
-        .padding(horizontal = 24.dp,vertical = 8.dp), horizontalArrangement = Arrangement.SpaceBetween) {
+        .height(60.dp)
+        .background(
+            Brush.linearGradient(
+                colors = listOf(
+                    Color(62, 125, 250), //purple-blue grad
+                    Color(134, 124, 247)
+                )
+            )
+        )
+        .padding(horizontal = 5.dp), horizontalArrangement = Arrangement.SpaceBetween) {
         Row() {
             IconButton(
+                modifier = Modifier.offset(0.dp,5.dp),
                 onClick = {
                     localBackPressed?.onBackPressed()
                 },
@@ -46,20 +53,18 @@ fun TopTaskAppBar(
             )
         }
         Row() {
-            Text(text = "Символов: " + descriptionTextFieldEdit.length,color=Color.White,
-                modifier = Modifier
-                    .padding(12.dp)
-            )
             if (screenState.value == ScreenTask.Edit){
                 IconButton(
+                    modifier = Modifier.offset(0.dp,5.dp),
                     onClick = {screenState.value = ScreenTask.View},
-                    content = { Icon(imageVector = ImageVector.vectorResource(id = R.drawable.ic_baseline_view_24),
+                    content = { Icon(imageVector = ImageVector.vectorResource(id = R.drawable.ic_baseline_view_new_24),
                         contentDescription = "view", tint = Color.White) },
                 )
             }else if (screenState.value == ScreenTask.View){
                 IconButton(
+                    modifier = Modifier.offset(0.dp,5.dp),
                     onClick = {screenState.value = ScreenTask.Edit},
-                    content = { Icon(imageVector = ImageVector.vectorResource(id = R.drawable.ic_baseline_edit_24),
+                    content = { Icon(imageVector = ImageVector.vectorResource(id = R.drawable.ic_baseline_edit_new_24),
                         contentDescription = "edit", tint = Color.White) },
                 )
             }

@@ -18,6 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
@@ -90,11 +91,19 @@ fun ExpandableCard(
         }
     }
     val transition = updateTransition(transitionState, label = "transition")
+
+
+
     val cardBgColor by transition.animateColor({
         tween(durationMillis = EXPAND_ANIMATION_DURATION)
     }, label = "bgColorTransition") {
-        if (expanded) Color.White else Color.Black
+        if (expanded) Color.White else Color(62, 125, 250)
     }
+
+
+
+
+
     val cardColor by transition.animateColor({
         tween(durationMillis = EXPAND_ANIMATION_DURATION)
     }, label = "colorTransition") {
@@ -250,7 +259,7 @@ fun ExpandableContent(
                         }
                     }
                     .padding(5.dp)
-                    .border(BorderStroke(3.dp, Color.Black), shape)
+                    .border(BorderStroke(3.dp, Color(66, 142, 255)),shape)
                     .fillMaxWidth()
                     .padding(10.dp)
                 ){

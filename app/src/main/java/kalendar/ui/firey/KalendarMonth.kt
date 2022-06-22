@@ -2,8 +2,11 @@ package com.himanshoe.kalendar.ui.firey
 
 import android.os.Build
 import androidx.annotation.RequiresApi
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Badge
 import androidx.compose.material.BadgedBox
 import androidx.compose.material.Text
@@ -14,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.himanshoe.kalendar.common.KalendarKonfig
 import com.himanshoe.kalendar.common.KalendarSelector
@@ -109,15 +113,16 @@ internal fun KalendarMonth(
                             BadgedBox(badge = { Badge(modifier=Modifier
                                 .size(if (countToday != 0) 20.dp else 0.dp)
                                 .offset(-20.dp,10.dp)
+                                .border(BorderStroke(2.dp,Color(56, 174, 242)), RoundedCornerShape(7.dp))
 //                                .background(Color.White),
                                     ,
-                                backgroundColor = Color.Black,
-                                contentColor = Color.White
+                                backgroundColor = Color.White,
+                                contentColor = Color.Black
 
                             ){
 
 //                                if (countToday != 0){
-                                    Text(text = countToday.toString(),modifier=Modifier)
+                                    Text(text = countToday.toString(),modifier=Modifier, softWrap = false)
 //                                }
 
                             }

@@ -1,4 +1,4 @@
-package com.example.project_am_manager.presentation.ui.compose.components.topbar
+package com.example.project_am_manager.presentation.ui.compose.topbar
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -15,8 +15,9 @@ import androidx.compose.ui.unit.dp
 import com.example.project_am_manager.R
 import com.example.project_am_manager.presentation.viewmodel.MainViewModel
 
+
 @Composable
-fun HierarchyTopBar(
+fun MainHierarchyTopBar(
     viewModel: MainViewModel
 ) {
     Row(

@@ -1,4 +1,4 @@
-package com.example.project_am_manager.presentation.ui.compose.components.floatingactionbutton
+package com.example.project_am_manager.presentation.ui.compose.floatingactionbutton.main
 
 import androidx.compose.material.FloatingActionButton
 import androidx.compose.material.FloatingActionButtonDefaults
@@ -14,18 +14,16 @@ import androidx.compose.ui.unit.dp
 import com.example.project_am_manager.R
 import com.example.project_am_manager.presentation.activity.TaskActivity
 import com.example.project_am_manager.presentation.viewmodel.MainViewModel
-import routing.Screen
+import routing.MainScreen
 
 @Composable
 fun MainExtendedFloatingActionButton(
     viewModel: MainViewModel
 ) {
-    val screenStateMain by viewModel.screenStateMain.collectAsState()
-    val parentBoardId by viewModel.parentBoardId.collectAsState()
-
+    val screenStateMain by viewModel.screenState.collectAsState()
+    val currentBoardId by viewModel.currentBoardId.collectAsState()
     val context = LocalContext.current
-    if (screenStateMain == Screen.Home) {
-
+    if (screenStateMain == MainScreen.Home) {
         FloatingActionButton(
             backgroundColor = Color.Black,
             contentColor = Color.White,
@@ -36,7 +34,7 @@ fun MainExtendedFloatingActionButton(
                 )
             },
             onClick = {
-                val intent = TaskActivity.newIntentAddTask(context, parentBoardId)
+                val intent = TaskActivity.newIntentAddTask(context, currentBoardId)
                 context.startActivity(intent)
             },
             elevation = FloatingActionButtonDefaults.elevation(8.dp)

@@ -1,4 +1,4 @@
-package com.example.project_am_manager.presentation.ui.compose.screens.main//package com.example.project_am_manager.presentation.ui.compose.screens
+package com.example.project_am_manager.presentation.ui.compose.components
 
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -18,34 +18,25 @@ import com.himanshoe.kalendar.ui.KalendarType
 import java.text.SimpleDateFormat
 import java.util.*
 
-@Composable
-fun HistoryScreen(
-    viewModel: MainViewModel
-) {
-    LazyColumnDemo(viewModel)
-}
 
 @Composable
-fun LazyColumnDemo(viewModel: MainViewModel) {
-    val allTasks: List<TaskItem> by viewModel.getTaskList().observeAsState(emptyList())
-    val formatter = SimpleDateFormat("dd:MM:yyyy hh:mm:ss", Locale.US)
+fun LazyColumnWithCalendar(viewModel: MainViewModel) {
     val currentDate: MutableState<String> = remember {
         mutableStateOf(SimpleDateFormat("yyyy-MM-dd").format(Date()))
     }
-    val zeroTaskModel = listOf<TaskItem>(TaskItem("", "", "", Color.Black, 0, 0))
+    val tasksOnDate by viewModel.getTasksOnDate(currentDate.value).observeAsState(emptyList())
+
+    val zeroTaskModel = listOf(TaskItem("", "", "", Color.Black, 0, 0))
     LazyColumn(modifier = Modifier.fillMaxSize()) {
-        itemsIndexed(zeroTaskModel + allTasks.filter {
-            currentDate.value == SimpleDateFormat("yyyy-MM-dd").format(formatter.parse(it.date))
-        }, itemContent = { index, item ->
+        itemsIndexed(zeroTaskModel + tasksOnDate, itemContent = { index, item ->
             if (index == 0) {
                 Kalendar(
                     viewModel = viewModel,
                     kalendarType = KalendarType.Firey(),
-                    onCurrentDayClick = { day, event ->
+                    onCurrentDayClick = { day, _ ->
                         currentDate.value = day.toString()
                     },
                     errorMessage = {
-
                     })
                 Spacer(
                     modifier = Modifier
@@ -53,12 +44,8 @@ fun LazyColumnDemo(viewModel: MainViewModel) {
                         .height(10.dp)
                 )
             } else {
-                ToastContent(viewModel, item)
-                if (index == allTasks.filter {
-                        currentDate.value == SimpleDateFormat("yyyy-MM-dd").format(
-                            formatter.parse(it.date)
-                        )
-                    }.size) {
+                TaskCard(viewModel, item)
+                if (index == tasksOnDate.size) {
                     Spacer(
                         modifier = Modifier
                             .fillMaxWidth()

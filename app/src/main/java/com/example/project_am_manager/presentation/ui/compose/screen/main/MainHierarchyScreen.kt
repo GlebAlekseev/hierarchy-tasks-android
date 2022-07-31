@@ -1,12 +1,16 @@
-package com.example.project_am_manager.presentation.ui.compose.screens.main
+package com.example.project_am_manager.presentation.ui.compose.screen.main
 
 
-import androidx.compose.animation.core.*
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.*
-import androidx.compose.foundation.gestures.*
+import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.transformable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.*
+import androidx.compose.material.DropdownMenu
+import androidx.compose.material.DropdownMenuItem
+import androidx.compose.material.Icon
+import androidx.compose.material.Text
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
@@ -18,35 +22,33 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.input.pointer.*
+import androidx.compose.ui.input.pointer.RequestDisallowInterceptTouchEvent
+import androidx.compose.ui.input.pointer.consumeAllChanges
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInParent
 import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import com.example.project_am_manager.R
 import com.example.project_am_manager.domain.entity.BoardItem
-import com.example.project_am_manager.presentation.ui.compose.components.alertdialog.AlertDialogAdding
-import com.example.project_am_manager.presentation.ui.compose.components.alertdialog.AlertDialogEditing
 import com.example.project_am_manager.presentation.viewmodel.MainViewModel
-import com.google.accompanist.pager.ExperimentalPagerApi
-import routing.Screen
+import routing.MainScreen
 import kotlin.math.roundToInt
 
 
 @Composable
-fun HierarchyScreen(
+fun MainHierarchyScreen(
     viewModel: MainViewModel
 ) {
-    TransformableSample(viewModel)
+    TransformableArea(viewModel)
 }
 
 @Composable
-fun TransformableSample(
+fun TransformableArea(
     viewModel: MainViewModel
 ) {
     val state_scroll_horizontal = rememberScrollState()
@@ -59,7 +61,6 @@ fun TransformableSample(
     Box(
         Modifier
             .fillMaxSize()
-
             .horizontalScroll(state_scroll_horizontal)
             .verticalScroll(state_scroll_vertical)
             .background(Color.White)
@@ -81,8 +82,8 @@ fun TransformableSample(
                 .background(Color.White), horizontalAlignment = Alignment.Start
         ) {
             when (screenHierarchyState) {
-                Screen.Hierarchy2 -> BuildingHierarchy(viewModel)
-                Screen.Hierarchy -> BuildingHierarchy(viewModel)
+                MainScreen.Hierarchy2 -> BuildingHierarchy(viewModel)
+                MainScreen.Hierarchy -> BuildingHierarchy(viewModel)
                 else -> {}
             }
         }
@@ -94,8 +95,6 @@ fun TransformableSample(
 fun BuildingHierarchy(
     viewModel: MainViewModel
 ) {
-    val allBoards: List<BoardItem> by viewModel.getBoardList().observeAsState(emptyList())
-
     Row() {
         val listOffsetsBoards: MutableList<boardBlock> = remember {
             mutableListOf()
@@ -104,19 +103,16 @@ fun BuildingHierarchy(
             modifier = Modifier
                 .align(Alignment.CenterVertically)
         ) {
-            // Второй root
             Board(
                 viewModel,
-                allBoards.filter { it.id == it.parent_id }.firstOrNull(),
-                listOffsetsBoards
+                viewModel.getBoard(1),
+                listOffsetsBoards,
             )
         }
         Column(modifier = Modifier.align(Alignment.CenterVertically)) {
-            // Второй root
             ColumnZ(
                 viewModel,
-                allBoards.filter { it.id == it.parent_id }.firstOrNull()
-                    .let { if (it != null) it.id else 0L },
+                viewModel.getBoard(1).id,
                 listOffsetsBoards
             )
         }
@@ -132,20 +128,21 @@ fun ColumnZ(
     listOffsetsBoards: MutableList<boardBlock>
 ) {
     if (idBoard == 0L) return
-    val allBoards: List<BoardItem> by viewModel.getBoardList().observeAsState(emptyList())
     val startY = remember {
         mutableStateOf(0f)
     }
-    allBoards.filter { it.parent_id == idBoard && it.id != it.parent_id }
+    val boardsForParentWithoutRoot by viewModel.getBoardsForParentWithoutRoot(idBoard)
+        .observeAsState(emptyList())
+    boardsForParentWithoutRoot.filter { it.parent_id == idBoard && it.id != it.parent_id }
         .forEachIndexed { index, it ->
             Row(modifier = Modifier
                 .background(Color.White)
                 .onGloballyPositioned {
-                    if (index == allBoards.filter { it.parent_id == idBoard && it.id != it.parent_id }.size - 1) startY.value =
+                    if (index == boardsForParentWithoutRoot.size - 1) startY.value =
                         it.positionInParent().y
                 }
                 .drawBehind {
-                    if (allBoards.filter { it.parent_id == idBoard && it.id != it.parent_id }.size == 1) {
+                    if (boardsForParentWithoutRoot.size == 1) {
                     } else if (index == 0) {
                         drawLine(
                             start = Offset(x = 0f, y = 0f + size.height / 2),
@@ -153,7 +150,7 @@ fun ColumnZ(
                             color = Color(53, 146, 252),
                             strokeWidth = 8F
                         )
-                    } else if (index == allBoards.filter { it.parent_id == idBoard && it.id != it.parent_id }.size - 1) {
+                    } else if (index == boardsForParentWithoutRoot.size - 1) {
                         drawLine(
                             start = Offset(x = 0f, y = 0f),
                             end = Offset(x = 0f, y = size.height - size.height / 2),
@@ -186,7 +183,7 @@ fun ColumnZ(
 }
 
 data class boardBlock(
-    var board: BoardItem?,
+    var board: BoardItem,
     var offset: MutableState<Offset>,
     var selected: MutableState<Boolean>,
     var size: MutableState<IntSize>
@@ -199,7 +196,7 @@ data class boardBlock(
 @Composable
 fun Board(
     viewModel: MainViewModel,
-    board: BoardItem?,
+    board: BoardItem,
     listOffsetsBoards: MutableList<boardBlock>
 ) {
     val screenHierarchyState by viewModel.screenHierarchyState.collectAsState()
@@ -211,10 +208,6 @@ fun Board(
     val offset_global = remember {
         mutableStateOf(Offset.Zero)
     }
-
-    AlertDialogAdding(viewModel)
-    AlertDialogEditing(viewModel, board)
-
     val requestDisallowInterceptTouchEvent = RequestDisallowInterceptTouchEvent()
     requestDisallowInterceptTouchEvent.invoke(true)
 
@@ -282,27 +275,27 @@ fun Board(
                 },
                 onDragEnd = {
                     if (listOffsetsBoards.filter { it.selected.value == true }.size >= 1) {
-                        if (screenHierarchyState == Screen.Hierarchy) {
-                            viewModel.setScreenHierarchyState(Screen.Hierarchy2)
+                        if (screenHierarchyState == MainScreen.Hierarchy) {
+                            viewModel.setScreenHierarchyState(MainScreen.Hierarchy2)
                         } else {
-                            viewModel.setScreenHierarchyState(Screen.Hierarchy)
+                            viewModel.setScreenHierarchyState(MainScreen.Hierarchy)
                         }
                     } else {
                         // Сбросить назад
-                        if (screenHierarchyState == Screen.Hierarchy) {
-                            viewModel.setScreenHierarchyState(Screen.Hierarchy2)
+                        if (screenHierarchyState == MainScreen.Hierarchy) {
+                            viewModel.setScreenHierarchyState(MainScreen.Hierarchy2)
                         } else {
-                            viewModel.setScreenHierarchyState(Screen.Hierarchy)
+                            viewModel.setScreenHierarchyState(MainScreen.Hierarchy)
                         }
                     }
                 })
         }
         .combinedClickable(
             onClick = {
-                viewModel.setCurrentBoardId(board!!.id)
+                viewModel.setCurrentBoardId(board.id)
             },
             onLongClick = {
-                viewModel.setCurrentBoardId(board!!.id)
+                viewModel.setCurrentBoardId(board.id)
                 expanded = true
             },
         )
@@ -317,7 +310,7 @@ fun Board(
         )
         Text(
             modifier = Modifier.align(Alignment.CenterHorizontally),
-            text = board?.name.orEmpty(),
+            text = board.name.orEmpty(),
             color = Color.Black
         )
         DropdownMenu(
@@ -337,10 +330,8 @@ fun Board(
             }
             if (board.let { if (it != null) it.id else 1L } != 1L) {
                 DropdownMenuItem(onClick = {
-                    if (allBoards.filter { it.id == board?.id }.first()
-                            .let { if (it != null) it.id else 1L } != 1L
-                    ) {
-                        viewModel.deleteBoard(allBoards.filter { it.id == board?.id }.first())
+                    if (board.id != 1L) {
+                        viewModel.deleteBoard(viewModel.getBoard(board.id))
                     }
                     expanded = false
                 }) {
@@ -352,15 +343,15 @@ fun Board(
 }
 
 
-fun getAllParentsBoardIds(board: BoardItem?, listBoard: List<BoardItem>): List<Long> {
+fun getAllParentsBoardIds(board: BoardItem, listBoard: List<BoardItem>): List<Long> {
     var parentsBoard = mutableListOf<Long>()
-    var parentBoard: BoardItem? = board
-    parentsBoard.add(parentBoard!!.id)
+    var parentBoard: BoardItem = board
+    parentsBoard.add(parentBoard.id)
     var i = 0
     while (i < listBoard.size) {
-        parentBoard = listBoard.filter { parentBoard!!.parent_id == it.id }.lastOrNull()
-        parentsBoard.add(parentBoard!!.id)
-        if (parentBoard!!.id == parentBoard!!.parent_id) break
+        parentBoard = listBoard.filter { parentBoard.parent_id == it.id }.last()
+        parentsBoard.add(parentBoard.id)
+        if (parentBoard.id == parentBoard.parent_id) break
         i++
     }
     return parentsBoard

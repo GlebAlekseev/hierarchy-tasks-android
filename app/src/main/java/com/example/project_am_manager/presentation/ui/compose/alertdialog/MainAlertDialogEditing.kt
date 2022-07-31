@@ -1,4 +1,4 @@
-package com.example.project_am_manager.presentation.ui.compose.components.alertdialog
+package com.example.project_am_manager.presentation.ui.compose.alertdialog
 
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
@@ -23,20 +23,17 @@ import com.example.project_am_manager.presentation.viewmodel.MainViewModel
 import java.text.SimpleDateFormat
 import java.util.*
 
+
 @Composable
-fun AlertDialogEditing(
+fun MainAlertDialogEditing(
     viewModel: MainViewModel,
-    board: BoardItem?
 ) {
     val openDialogEditing by viewModel.openDialogEditing.collectAsState()
-    val nameBoardAlertDialogEditing by viewModel.nameBoardAlertDialogEditing.collectAsState()
-    val currentBoardId by viewModel.currentBoardId.collectAsState()
-    val parentBoardId by viewModel.parentBoardId.collectAsState()
-    val allBoards: List<BoardItem> by viewModel.getBoardList().observeAsState(emptyList())
-
-    viewModel.setNameBoardAlertDialogEditing(allBoards.filter { it.id == currentBoardId }
-        .firstOrNull()?.name.orEmpty())
     if (openDialogEditing) {
+        val nameBoardAlertDialogEditing by viewModel.nameBoardAlertDialogEditing.collectAsState()
+        val currentBoardId by viewModel.currentBoardId.collectAsState()
+        val parentBoardId by viewModel.parentBoardId.collectAsState()
+        viewModel.setNameBoardAlertDialogEditing(viewModel.getBoard(currentBoardId).name)
         AlertDialog(
             onDismissRequest = {
                 viewModel.setOpenDialogEditing(false)
@@ -71,7 +68,7 @@ fun AlertDialogEditing(
                         value = nameBoardAlertDialogEditing,
                         onValueChange = { viewModel.setNameBoardAlertDialogEditing(it) },
                         textStyle = TextStyle(Color.Gray),
-                        modifier = androidx.compose.ui.Modifier
+                        modifier = Modifier
                             .offset(0.dp, 10.dp)
                             .border(1.5f.dp, Color.Black, RoundedCornerShape(25.dp))
                             .padding(5.dp, 6.dp)
@@ -83,8 +80,7 @@ fun AlertDialogEditing(
                             .fillMaxWidth()
                     ) {
                         Text(
-                            text = "Родитель: " + allBoards.filter { it.id == parentBoardId }
-                                .firstOrNull()?.name.orEmpty(),
+                            text = "Родитель: " + viewModel.getBoard(parentBoardId).name,
                             fontSize = 15.sp,
                             fontWeight = FontWeight.SemiBold,
                             modifier = Modifier
@@ -104,13 +100,12 @@ fun AlertDialogEditing(
                         contentColor = Color.White
                     ),
                     onClick = {
-                        if (board.let { if (it != null) it.id else 1L } != 1L) {
+                        if (currentBoardId != 1L) {
                             viewModel.editBoard(
                                 BoardItem(
                                     nameBoardAlertDialogEditing,
                                     SimpleDateFormat("dd:MM:yyyy hh:mm:ss").format(Date()),
-                                    allBoards.filter { it.id == currentBoardId }.firstOrNull()
-                                        .let { if (it != null) it.parent_id else 1L },
+                                    parentBoardId,
                                     currentBoardId,
                                 )
                             )

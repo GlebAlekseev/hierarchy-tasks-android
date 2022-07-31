@@ -1,4 +1,4 @@
-package com.example.project_am_manager.presentation.ui.compose.components
+package com.example.project_am_manager.presentation.ui.compose.alertdialog
 
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.offset
@@ -22,7 +22,7 @@ import com.example.project_am_manager.presentation.viewmodel.TaskViewModel
 
 
 @Composable
-fun AlertDialogSave(viewModel: TaskViewModel) {
+fun TaskAlertDialogBack(viewModel: TaskViewModel) {
     val openDialogSave by viewModel.openDialogSave.collectAsState()
 
     val transmittedId by viewModel.transmittedId.collectAsState()

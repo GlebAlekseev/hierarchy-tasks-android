@@ -30,7 +30,6 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import com.example.project_am_manager.R
 import com.example.project_am_manager.domain.entity.BoardItem
-import com.example.project_am_manager.domain.entity.TaskItem
 import com.example.project_am_manager.presentation.viewmodel.IGuaranteeViewModel
 import com.example.project_am_manager.presentation.viewmodel.MainViewModel
 import com.example.project_am_manager.presentation.viewmodel.TaskViewModel
@@ -44,9 +43,9 @@ fun BoardsScreen(
     viewModel: IGuaranteeViewModel,
     isEdit: Boolean
 ) {
-    val allBoards: List<BoardItem> by viewModel.getBoardList().observeAsState(emptyList())
     val expandedCardIds by viewModel.expandedBoardIdsList.collectAsState()
-    val allTasks: List<TaskItem> by viewModel.getTaskList().observeAsState(emptyList())
+    val itemsForLazyColumn by if (isEdit) viewModel.getBoardsIsParent().observeAsState(emptyList())
+    else viewModel.getBoardsWithChildrenHaveTasks().observeAsState(emptyList())
 
     Scaffold(
         backgroundColor = Color(
@@ -57,13 +56,7 @@ fun BoardsScreen(
         )
     ) {
         LazyColumn {
-            itemsIndexed(allBoards.filter { a ->
-                !allBoards.filter { b ->
-                    a.id == b.parent_id && if (!isEdit) {
-                        !allTasks.filter { b.id == it.parent_id }.isNullOrEmpty()
-                    } else true
-                }.isNullOrEmpty()
-            }) { _, board ->
+            itemsIndexed(itemsForLazyColumn) { _, board ->
                 ExpandableCard(
                     viewModel = viewModel,
                     onCardArrowClick = { viewModel.onBoardArrowClicked(board.id) },
@@ -195,14 +188,14 @@ fun ExpandableContent(
     board: BoardItem,
     visible: Boolean = true,
     isEdit: Boolean
-
 ) {
-    val allBoards: List<BoardItem> by viewModel.getBoardList().observeAsState(emptyList())
-    val allTasks: List<TaskItem> by viewModel.getTaskList().observeAsState(emptyList())
     val stateModal by viewModel.stateModal.collectAsState()
     val indexAnimateTarget by viewModel.indexAnimateTarget.collectAsState()
     val pagerState by viewModel.pagerState.collectAsState()
     val scope = rememberCoroutineScope()
+    val itemsForParent by if (isEdit) viewModel.getBoardsForParent(board.id)
+        .observeAsState(emptyList())
+    else viewModel.getBoardsForParentWithChildrenHaveTasks(board.id).observeAsState(emptyList())
 
     val enterFadeIn = remember {
         fadeIn(
@@ -237,16 +230,12 @@ fun ExpandableContent(
                 .padding(8.dp)
                 .fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            allBoards.filter { a ->
-                a.parent_id == board.id &&
-                        if (!isEdit) {
-                            !allTasks.filter { a.id == it.parent_id }.isNullOrEmpty()
-                        } else true
-            }.forEach {
-
+            itemsForParent.forEach {
                 Box(modifier = Modifier
                     .clickable {
-                        if (isEdit && viewModel is TaskViewModel) viewModel.setTransmittedParentId(it.id)
+                        if (isEdit && viewModel is TaskViewModel) viewModel.setTransmittedParentId(
+                            it.id
+                        )
                         scope.launch {
                             if (!isEdit && viewModel is MainViewModel) {
                                 stateModal.hide()
@@ -254,10 +243,10 @@ fun ExpandableContent(
                                 viewModel.refreshIndexAnimateTarget()
                                 if (indexAnimateTarget != -1) {
                                     pagerState.animateScrollToPage(indexAnimateTarget)
-                                    pagerState.animateScrollToPage(indexAnimateTarget)
+//                                    pagerState.animateScrollToPage(indexAnimateTarget)
                                 }
                             } else if (isEdit) {
-                                    viewModel.stateModal.value.hide()
+                                viewModel.stateModal.value.hide()
                             }
                         }
                     }

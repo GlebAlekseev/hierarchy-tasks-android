@@ -19,9 +19,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.project_am_manager.domain.entity.BoardItem
 import com.example.project_am_manager.presentation.viewmodel.TaskViewModel
+import java.lang.RuntimeException
 
 @Composable
-fun ViewScreen(
+fun TaskViewScreen(
     viewModel: TaskViewModel
 ) {
     val currentDate by viewModel.currentDate.collectAsState()
@@ -29,7 +30,6 @@ fun ViewScreen(
     val nameTextFieldEdit by viewModel.nameTextFieldEdit.collectAsState()
     val transmittedParentId by viewModel.transmittedParentId.collectAsState()
 
-    val allBoards: List<BoardItem> by viewModel.getBoardList().observeAsState(emptyList())
     Column(modifier = Modifier.fillMaxSize()) {
         Text(
             text = nameTextFieldEdit,
@@ -54,8 +54,7 @@ fun ViewScreen(
         ) {
             Text(
                 fontWeight = FontWeight.W200, fontSize = 14.sp, color = Color.Black,
-                text = allBoards.filter { it.id == transmittedParentId }.firstOrNull()
-                    .let { if (it != null) it.name else "Error" })
+                text = viewModel.getBoard(transmittedParentId).name)
             Row() {
                 Icon(
                     imageVector = ImageVector.vectorResource(id = R.drawable.ic_baseline_time_24),

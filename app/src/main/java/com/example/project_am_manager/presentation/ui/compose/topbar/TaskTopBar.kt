@@ -1,4 +1,4 @@
-package com.example.project_am_manager.presentation.ui.compose.components.topbar
+package com.example.project_am_manager.presentation.ui.compose.topbar
 
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.foundation.background
@@ -6,7 +6,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -15,14 +16,14 @@ import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
 import com.example.project_am_manager.R
 import com.example.project_am_manager.presentation.viewmodel.TaskViewModel
-import routing.ScreenTask
+import routing.TaskScreen
 
 
 @Composable
-fun TopTaskAppBar(
-    screenState: MutableState<ScreenTask>,
+fun TaskTopBar(
     viewModel: TaskViewModel
 ) {
+    val screenState by viewModel.screenState.collectAsState()
     val localBackPressed = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
     Row(
         modifier = Modifier
@@ -31,7 +32,7 @@ fun TopTaskAppBar(
             .background(
                 Brush.linearGradient(
                     colors = listOf(
-                        Color(62, 125, 250), //purple-blue grad
+                        Color(62, 125, 250),
                         Color(134, 124, 247)
                     )
                 )
@@ -53,10 +54,10 @@ fun TopTaskAppBar(
             )
         }
         Row() {
-            if (screenState.value == ScreenTask.Edit) {
+            if (screenState == TaskScreen.Edit) {
                 IconButton(
                     modifier = Modifier.offset(0.dp, 5.dp),
-                    onClick = { screenState.value = ScreenTask.View },
+                    onClick = { viewModel.setScreenState(TaskScreen.View) },
                     content = {
                         Icon(
                             imageVector = ImageVector.vectorResource(id = R.drawable.ic_baseline_view_new_24),
@@ -64,10 +65,10 @@ fun TopTaskAppBar(
                         )
                     },
                 )
-            } else if (screenState.value == ScreenTask.View) {
+            } else if (screenState == TaskScreen.View) {
                 IconButton(
                     modifier = Modifier.offset(0.dp, 5.dp),
-                    onClick = { screenState.value = ScreenTask.Edit },
+                    onClick = { viewModel.setScreenState(TaskScreen.Edit) },
                     content = {
                         Icon(
                             imageVector = ImageVector.vectorResource(id = R.drawable.ic_baseline_edit_new_24),

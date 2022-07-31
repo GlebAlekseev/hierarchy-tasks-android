@@ -10,6 +10,7 @@ import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.ModalBottomSheetState
 import androidx.compose.material.ModalBottomSheetValue
 import androidx.lifecycle.LiveData
+import androidx.lifecycle.Transformations
 import androidx.lifecycle.ViewModel
 import com.example.project_am_manager.domain.entity.BoardItem
 import com.example.project_am_manager.domain.entity.TaskItem
@@ -20,6 +21,8 @@ import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.PagerState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import routing.MainScreen
+import routing.TaskScreen
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -165,7 +168,14 @@ class TaskViewModel(private val repositoryTask: TaskListRepository, private val 
         }
     }
 
+    // TaskAppContent
 
+    private var _screenState: MutableStateFlow<TaskScreen> = MutableStateFlow(TaskScreen.View)
+    val screenState: StateFlow<TaskScreen>
+        get() = _screenState
+    fun setScreenState(value: TaskScreen) {
+        _screenState.value = value
+    }
 
 
     // mock
@@ -198,5 +208,59 @@ class TaskViewModel(private val repositoryTask: TaskListRepository, private val 
 //    }
 //
 //
+
+
+
+
+
+
+
+
+
+
+    ////////////////////
+    fun getTasksForParent(parentId: Long): LiveData<List<TaskItem>> =
+        Transformations.map(getTaskList()) {
+            it.filter { item ->
+                item.parent_id == parentId
+            }
+        }
+
+    override fun getBoardsForParent(parentId: Long): LiveData<List<BoardItem>> =
+        Transformations.map(getBoardList()) {
+            it.filter { item ->
+                item.parent_id == parentId
+            }
+        }
+    override fun getBoardsForParentWithChildrenHaveTasks(parentId: Long): LiveData<List<BoardItem>> =
+        Transformations.map(getBoardsForParent(parentId)) {
+            it.filter { item ->
+                item.parent_id == parentId && isBoardHaveTasks(item)
+            }
+        }
+
+    private fun isBoardParent(boardItem: BoardItem): Boolean {
+        return !getBoardList().value?.filter { it.parent_id == boardItem.id }.isNullOrEmpty()
+    }
+
+    private fun isBoardHaveTasks(boardItem: BoardItem): Boolean {
+        return !getTaskList().value?.filter { it.parent_id == boardItem.id }.isNullOrEmpty()
+    }
+
+    // Все доски, у которых есть дети
+    override fun getBoardsIsParent(): LiveData<List<BoardItem>> =
+        Transformations.map(getBoardList()) {
+            it.filter { item ->
+                isBoardParent(item)
+            }
+        }
+
+    override fun getBoardsWithChildrenHaveTasks(): LiveData<List<BoardItem>> =
+        Transformations.map(getBoardsIsParent()) {
+            it.filter { item ->
+                isBoardHaveTasks(item)
+            }
+        }
+
 
 }

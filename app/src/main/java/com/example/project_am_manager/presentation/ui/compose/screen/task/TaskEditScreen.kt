@@ -26,10 +26,12 @@ import androidx.compose.ui.unit.sp
 import com.example.project_am_manager.domain.entity.BoardItem
 import com.example.project_am_manager.presentation.viewmodel.TaskViewModel
 import kotlinx.coroutines.launch
+import java.lang.Exception
+import java.lang.RuntimeException
 
 
 @Composable
-fun EditScreen(
+fun TaskEditScreen(
     viewModel: TaskViewModel
 ) {
     val stateModalEdit by viewModel.stateModal.collectAsState()
@@ -38,7 +40,7 @@ fun EditScreen(
     val nameTextFieldEdit by viewModel.nameTextFieldEdit.collectAsState()
     val transmittedParentId by viewModel.transmittedParentId.collectAsState()
     val relocationRequester by viewModel.relocationRequester.collectAsState()
-    val allBoards: List<BoardItem> by viewModel.getBoardList().observeAsState(emptyList())
+
     val scope = rememberCoroutineScope()
     Column(modifier = Modifier.fillMaxSize()) {
         TextField(
@@ -86,8 +88,7 @@ fun EditScreen(
             }) {
                 Text(
                     fontWeight = FontWeight.W200, fontSize = 14.sp, color = Color.Black,
-                    text = allBoards.filter { it.id == transmittedParentId }.firstOrNull()
-                        .let { if (it != null) it.name else "Error" })
+                    text = viewModel.getBoard(transmittedParentId).name)
                 Icon(
                     imageVector = ImageVector.vectorResource(id = R.drawable.ic_baseline_down_24),
                     contentDescription = "",

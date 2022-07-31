@@ -1,13 +1,18 @@
 @file:OptIn(ExperimentalMaterialApi::class)
 
-package com.example.project_am_manager.presentation.ui.compose.components.topbar
+package com.example.project_am_manager.presentation.ui.compose.topbar
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.*
-import androidx.compose.runtime.*
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.Icon
+import androidx.compose.material.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -21,13 +26,14 @@ import com.example.project_am_manager.domain.entity.BoardItem
 import com.example.project_am_manager.presentation.viewmodel.MainViewModel
 import kotlinx.coroutines.launch
 
+
 @Composable
-fun HomeTopBar(
+fun MainHomeTopBar(
     viewModel: MainViewModel
 ) {
     val scope = rememberCoroutineScope()
     val allBoards: List<BoardItem> by viewModel.getBoardList().observeAsState(emptyList())
-    val stateModalMain by viewModel.stateModal.collectAsState()
+    val stateModal by viewModel.stateModal.collectAsState()
     val parentBoardId by viewModel.parentBoardId.collectAsState()
 
     Row(
@@ -47,10 +53,10 @@ fun HomeTopBar(
     )
     {
         Row(modifier = Modifier.clickable {
-            if (stateModalMain.isVisible) {
-                scope.launch { stateModalMain.hide() }
+            if (stateModal.isVisible) {
+                scope.launch { stateModal.hide() }
             } else {
-                scope.launch { stateModalMain.show() }
+                scope.launch { stateModal.show() }
             }
         }) {
             Text(

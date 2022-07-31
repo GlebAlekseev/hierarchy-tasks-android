@@ -3,30 +3,25 @@ package routing
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import com.example.project_am_manager.R
+import com.example.project_am_manager.presentation.ui.compose.routing.Router
 
-sealed class Screen(val titleResId: Int){
-    object Home : Screen(R.string.home)
-    object Hierarchy : Screen(R.string.hierarchy)
-    object Hierarchy2 : Screen(R.string.hierarchy)
-    object History : Screen(R.string.history)
-    object Task : Screen(R.string.task)
+sealed class MainScreen(val titleResId: Int){
+    object Home : MainScreen(R.string.home)
+    object Hierarchy : MainScreen(R.string.hierarchy)
+    object Hierarchy2 : MainScreen(R.string.hierarchy)
+    object History : MainScreen(R.string.history)
 }
 
-object MainRouter {
-    var currentScreen: MutableState<Screen> = mutableStateOf(
-        Screen.Home
-    )
+object MainRouter: Router<MainScreen> {
+    override var currentScreen: MutableState<MainScreen> = mutableStateOf(MainScreen.Home)
+    override var previousScreen: MutableState<MainScreen> = mutableStateOf(MainScreen.Home)
 
-    private var previousScreen: MutableState<Screen> = mutableStateOf(
-        Screen.Home
-    )
-
-    fun navigateTo(destination: Screen) {
+    override fun navigateTo(destination: MainScreen) {
         previousScreen.value = currentScreen.value
         currentScreen.value = destination
     }
 
-    fun goBack() {
+    override fun goBack() {
         currentScreen.value = previousScreen.value
     }
 }

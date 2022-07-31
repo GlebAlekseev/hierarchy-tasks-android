@@ -5,6 +5,7 @@ package com.example.project_am_manager.presentation.viewmodel
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.ModalBottomSheetState
 import androidx.lifecycle.LiveData
+import androidx.lifecycle.Transformations
 import com.example.project_am_manager.domain.entity.BoardItem
 import com.example.project_am_manager.domain.entity.TaskItem
 import com.google.accompanist.pager.ExperimentalPagerApi
@@ -35,4 +36,10 @@ interface IGuaranteeViewModel {
     val stateModal: StateFlow<ModalBottomSheetState>
     val indexAnimateTarget: StateFlow<Int>
     val pagerState: StateFlow<PagerState>
+
+
+    fun getBoardsIsParent(): LiveData<List<BoardItem>>
+    fun getBoardsWithChildrenHaveTasks(): LiveData<List<BoardItem>>
+    fun getBoardsForParent(parentId: Long): LiveData<List<BoardItem>>
+    fun getBoardsForParentWithChildrenHaveTasks(parentId: Long): LiveData<List<BoardItem>>
 }

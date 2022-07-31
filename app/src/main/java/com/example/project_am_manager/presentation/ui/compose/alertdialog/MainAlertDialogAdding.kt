@@ -1,4 +1,4 @@
-package com.example.project_am_manager.presentation.ui.compose.components.alertdialog
+package com.example.project_am_manager.presentation.ui.compose.alertdialog
 
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Column
@@ -9,6 +9,7 @@ import androidx.compose.material.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
@@ -21,11 +22,11 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 @Composable
-fun AlertDialogAdding(viewModel: MainViewModel) {
+fun MainAlertDialogAdding(viewModel: MainViewModel) {
     val openDialogAdding by viewModel.openDialogAdding.collectAsState()
-    val nameBoardAlertDialogAdding by viewModel.nameBoardAlertDialogAdding.collectAsState()
-    val currentBoardId by viewModel.currentBoardId.collectAsState()
     if (openDialogAdding) {
+        val nameBoardAlertDialogAdding by viewModel.nameBoardAlertDialogAdding.collectAsState()
+        val currentBoardId by viewModel.currentBoardId.collectAsState()
         AlertDialog(
             onDismissRequest = {
                 viewModel.setOpenDialogAdding(false)
@@ -60,7 +61,7 @@ fun AlertDialogAdding(viewModel: MainViewModel) {
                         value = nameBoardAlertDialogAdding,
                         onValueChange = { viewModel.setNameBoardAlertDialogAdding(it) },
                         textStyle = TextStyle(Color.Gray),
-                        modifier = androidx.compose.ui.Modifier
+                        modifier = Modifier
                             .offset(0.dp, 10.dp)
                             .border(1.5f.dp, Color.Black, RoundedCornerShape(25.dp))
                             .padding(5.dp, 6.dp)

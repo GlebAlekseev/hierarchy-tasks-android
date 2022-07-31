@@ -8,7 +8,7 @@ import com.example.project_am_manager.ui.theme.MainTheme
 @Composable
 fun TaskApp(viewModel: TaskViewModel) {
     MainTheme {
-//        TaskAppContent(viewModel)
+        TaskAppContent(viewModel)
     }
 }
 

@@ -7,7 +7,7 @@ import androidx.compose.material.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.project_am_manager.domain.entity.BoardItem
 import com.example.project_am_manager.presentation.viewmodel.MainViewModel
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -31,9 +32,11 @@ fun MainAlertDialogEditing(
     val openDialogEditing by viewModel.openDialogEditing.collectAsState()
     if (openDialogEditing) {
         val nameBoardAlertDialogEditing by viewModel.nameBoardAlertDialogEditing.collectAsState()
-        val currentBoardId by viewModel.currentBoardId.collectAsState()
+        val currentHierarchyBoardId by viewModel.currentHierarchyBoardId.collectAsState()
         val parentBoardId by viewModel.parentBoardId.collectAsState()
-        viewModel.setNameBoardAlertDialogEditing(viewModel.getBoard(currentBoardId).name)
+        val scope = rememberCoroutineScope()
+        viewModel.setNameBoardAlertDialogEditing(viewModel.getBoard(currentHierarchyBoardId).name)
+
         AlertDialog(
             onDismissRequest = {
                 viewModel.setOpenDialogEditing(false)
@@ -100,18 +103,20 @@ fun MainAlertDialogEditing(
                         contentColor = Color.White
                     ),
                     onClick = {
-                        if (currentBoardId != 1L) {
-                            viewModel.editBoard(
-                                BoardItem(
-                                    nameBoardAlertDialogEditing,
-                                    SimpleDateFormat("dd:MM:yyyy hh:mm:ss").format(Date()),
-                                    parentBoardId,
-                                    currentBoardId,
+                        scope.launch {
+                            if (currentHierarchyBoardId != 1L) {
+                                viewModel.editBoard(
+                                    BoardItem(
+                                        nameBoardAlertDialogEditing,
+                                        SimpleDateFormat("dd:MM:yyyy hh:mm:ss").format(Date()),
+                                        parentBoardId,
+                                        currentHierarchyBoardId,
+                                    )
                                 )
-                            )
+                            }
+                            viewModel.setOpenDialogEditing(false)
+                            viewModel.setNameBoardAlertDialogEditing("")
                         }
-                        viewModel.setOpenDialogEditing(false)
-                        viewModel.setNameBoardAlertDialogEditing("")
                     }) {
                     Text("Сохранить")
                 }

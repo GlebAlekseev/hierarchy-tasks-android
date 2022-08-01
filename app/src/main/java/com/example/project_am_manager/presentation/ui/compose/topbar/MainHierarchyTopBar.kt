@@ -27,7 +27,7 @@ fun MainHierarchyTopBar(
                 Brush.linearGradient(
                     colors = listOf(
                         Color(134, 124, 247),
-                        Color(62, 125, 250), //purple-blue grad
+                        Color(62, 125, 250),
                     )
                 )
             )

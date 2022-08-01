@@ -9,6 +9,7 @@ import androidx.compose.material.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
@@ -18,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.project_am_manager.domain.entity.BoardItem
 import com.example.project_am_manager.presentation.viewmodel.MainViewModel
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -26,7 +28,8 @@ fun MainAlertDialogAdding(viewModel: MainViewModel) {
     val openDialogAdding by viewModel.openDialogAdding.collectAsState()
     if (openDialogAdding) {
         val nameBoardAlertDialogAdding by viewModel.nameBoardAlertDialogAdding.collectAsState()
-        val currentBoardId by viewModel.currentBoardId.collectAsState()
+        val currentHierarchyBoardId by viewModel.currentHierarchyBoardId.collectAsState()
+        val scope = rememberCoroutineScope()
         AlertDialog(
             onDismissRequest = {
                 viewModel.setOpenDialogAdding(false)
@@ -75,15 +78,17 @@ fun MainAlertDialogAdding(viewModel: MainViewModel) {
                         contentColor = Color.White
                     ),
                     onClick = {
-                        val boardTmp = BoardItem(
-                            nameBoardAlertDialogAdding,
-                            SimpleDateFormat("dd:MM:yyyy hh:mm:ss").format(Date()),
-                            currentBoardId,
-                            0
-                        )
-                        viewModel.addBoard(boardTmp)
-                        viewModel.setOpenDialogAdding(false)
-                        viewModel.setNameBoardAlertDialogAdding("")
+                        scope.launch {
+                            val boardTmp = BoardItem(
+                                nameBoardAlertDialogAdding,
+                                SimpleDateFormat("dd:MM:yyyy hh:mm:ss").format(Date()),
+                                currentHierarchyBoardId,
+                                0
+                            )
+                            viewModel.addBoard(boardTmp)
+                            viewModel.setOpenDialogAdding(false)
+                            viewModel.setNameBoardAlertDialogAdding("")
+                        }
                     }) {
                     Text("Добавить")
                 }

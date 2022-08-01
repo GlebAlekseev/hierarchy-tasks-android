@@ -6,9 +6,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.platform.LocalContext
-import com.example.project_am_manager.domain.entity.TaskItem
 import com.example.project_am_manager.presentation.activity.TaskActivity
 import com.example.project_am_manager.presentation.ui.compose.alertdialog.TaskAlertDialogBack
 import com.example.project_am_manager.presentation.ui.compose.content.TaskContent
@@ -30,13 +28,11 @@ fun TaskAppContent(viewModel: TaskViewModel) {
     }
     ModalBottomSheetChooseBoard(viewModel, true)
     TaskAlertDialogBack(viewModel)
-
     SetBackButtonAction(viewModel)
 }
 
-
 @Composable
-fun SetBackButtonAction(viewModel: TaskViewModel){
+fun SetBackButtonAction(viewModel: TaskViewModel) {
     val transmittedId by viewModel.transmittedId.collectAsState()
     val descriptionTextFieldEdit by viewModel.descriptionTextFieldEdit.collectAsState()
     val nameTextFieldEdit by viewModel.nameTextFieldEdit.collectAsState()
@@ -44,10 +40,10 @@ fun SetBackButtonAction(viewModel: TaskViewModel){
     val context = LocalContext.current as TaskActivity
 
     BackButtonAction {
-        val name_descr_parent_db = with(viewModel.getTask(transmittedId)){
-            name + description + parent_id
-        }
-        if (transmittedId == 0L && nameTextFieldEdit.length == 0 && descriptionTextFieldEdit.length == 0) {
+        val name_descr_parent_db = if (transmittedId != 0L) with(viewModel.getTask(transmittedId)) {
+            name + description + parent_id.toString()
+        } else transmittedParentId.toString()
+        if (transmittedId == 0L && nameTextFieldEdit.isEmpty() && descriptionTextFieldEdit.isEmpty()) {
             viewModel.setOpenDialogSave(false)
             context.finish()
         } else if (name_descr_parent_db == nameTextFieldEdit + descriptionTextFieldEdit + transmittedParentId) {

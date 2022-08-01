@@ -6,7 +6,6 @@ import androidx.compose.foundation.gestures.TransformableState
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.ModalBottomSheetState
 import androidx.compose.material.ModalBottomSheetValue
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.geometry.Offset
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MediatorLiveData
@@ -29,7 +28,7 @@ import java.util.*
 @OptIn(ExperimentalPagerApi::class)
 class MainViewModel(
     private val repositoryTask: TaskListRepository,
-    private val repositoryBoard: BoardListRepository
+    private val repositoryBoard: BoardListRepository,
 ) : ViewModel(), IGuaranteeViewModel {
 
     private val addBoardItemUseCase = AddBoardItemUseCase(repositoryBoard)
@@ -98,7 +97,6 @@ class MainViewModel(
         _animateNavController.value = value
     }
 
-
     private val _pagerState = MutableStateFlow(PagerState())
     override val pagerState: StateFlow<PagerState>
         get() = _pagerState
@@ -124,10 +122,7 @@ class MainViewModel(
     fun setSelectedNavPage(value: Int) {
         _selectedNavPage.value = value
     }
-
-
     // HomeScreen
-
 
     private val _parentBoardId = MutableStateFlow(1L)
     val parentBoardId: StateFlow<Long>
@@ -137,14 +132,33 @@ class MainViewModel(
         _parentBoardId.value = value
     }
 
-
-    private val _currentBoardId = MutableStateFlow(0L)
+    private val _currentBoardId = MutableStateFlow(_parentBoardId.value)
     val currentBoardId: StateFlow<Long>
         get() = _currentBoardId
 
-    fun setCurrentBoardId(value: Long) {
+    suspend fun setCurrentBoardId(value: Long) {
         _currentBoardId.value = value
-        setParentBoardId(getBoard(_currentBoardId.value).parent_id)
+        refreshIndexAnimateTarget(value)
+        val saveLast = indexAnimateTarget.value
+
+        pagerState.collect {
+            indexAnimateTarget.collect { index ->
+                if (saveLast != index) {
+                    it.animateScrollToPage(index)
+                }
+            }
+        }
+
+    }
+
+    private val _currentHierarchyBoardId = MutableStateFlow(1L)
+
+    //    private val _currentBoardId = MutableStateFlow( 0L )
+    val currentHierarchyBoardId: StateFlow<Long>
+        get() = _currentHierarchyBoardId
+
+    fun setCurrentHierarchyBoardId(value: Long) {
+        _currentHierarchyBoardId.value = value
     }
 
     // HistoryScreen
@@ -258,18 +272,10 @@ class MainViewModel(
         _indexAnimateTarget.value = value
     }
 
-    fun refreshIndexAnimateTarget() {
-        setIndexAnimateTarget(getBoardList().value?.filter { a ->
-            (a.parent_id == _parentBoardId.value && !getTaskList().value?.filter { it.parent_id == a.id }
-                .isNullOrEmpty())
-        }!!.indexOf(
-            if (getBoardList().value!!.filter { it.id == _currentBoardId.value }
-                    .lastOrNull() != null)
-                getBoardList().value!!.filter { it.id == _currentBoardId.value }.lastOrNull()
-            else
-                BoardItem("", "", 0, 0)
-        ).let { if (it == -1) 0 else it })
-        println("EEEEEEE refresh=${_indexAnimateTarget.value}")
+    fun refreshIndexAnimateTarget(currentBoardId: Long) {
+        getBoardsForParent(getBoard(currentBoardId).parent_id).observeForever {
+            setIndexAnimateTarget(it.indexOf(getBoard(currentBoardId)))
+        }
     }
 
     ////////////////////
@@ -286,6 +292,7 @@ class MainViewModel(
                 item.parent_id == parentId
             }
         }
+
     fun getBoardsForParentWithoutRoot(parentId: Long): LiveData<List<BoardItem>> =
         Transformations.map(getBoardList()) {
             it.filter { item ->
@@ -295,57 +302,57 @@ class MainViewModel(
 
     override fun getBoardsForParentWithChildrenHaveTasks(parentId: Long): LiveData<List<BoardItem>> =
         MediatorLiveData<List<BoardItem>>().apply {
-            addSource(getTaskList()){tasklist->
-                addSource(getBoardsForParent(parentId)){ boardlist->
-                    value = boardlist.filter { item->
-                        item.parent_id == parentId && (isBoardHaveTasks(item,tasklist) || item.id == parentId)
+            addSource(getTaskList()) { tasklist ->
+                addSource(getBoardsForParent(parentId)) { boardlist ->
+                    value = boardlist.filter { item ->
+                        item.parent_id == parentId && (isBoardHaveTasks(item,
+                            tasklist) || item.id == parentId)
                     }
                 }
             }
         }
 
 
-
-    private fun isBoardParent(boardItem: BoardItem,boardList:List<BoardItem>): Boolean {
+    private fun isBoardParent(boardItem: BoardItem, boardList: List<BoardItem>): Boolean {
         return !boardList.filter { it.parent_id == boardItem.id }.isNullOrEmpty()
     }
 
-    private fun isBoardHaveTasks(boardItem: BoardItem,taskList: List<TaskItem>): Boolean {
+    private fun isBoardHaveTasks(boardItem: BoardItem, taskList: List<TaskItem>): Boolean {
         return !taskList.filter { it.parent_id == boardItem.id }.isNullOrEmpty()
     }
-
 
 
     // Все доски, у которых есть дети
     override fun getBoardsIsParent(): LiveData<List<BoardItem>> =
         Transformations.map(getBoardList()) {
             it.filter { item ->
-                isBoardParent(item,it)
+                isBoardParent(item, it)
             }
         }
 
     override fun getBoardsWithChildrenHaveTasks(): LiveData<List<BoardItem>> =
         MediatorLiveData<List<BoardItem>>().apply {
-            addSource(getTaskList()){tasklist->
-                addSource(getBoardsIsParent()){ boardlist->
-                    value = boardlist.filter { item->
-                        isBoardHaveTasks(item,tasklist)
+            addSource(getTaskList()) { tasklist ->
+                addSource(getBoardsIsParent()) { boardlist ->
+                    value = boardlist.filter { item ->
+                        isBoardHaveTasks(item, tasklist)
                     }
                 }
             }
         }
 
-    fun getTasksForBoardsForParentWithChildrenHaveTasks(parentId: Long,page: Int): LiveData<List<TaskItem>> =
+    fun getTasksForBoardsForParent(
+        listBoardItem: List<BoardItem>,
+        page: Int,
+    ): LiveData<List<TaskItem>> =
         MediatorLiveData<List<TaskItem>>().apply {
-            addSource(getTaskList()){tasklist->
-                addSource(getBoardsForParentWithChildrenHaveTasks(parentId)){ boardlist->
-                    value = tasklist.filter { item->
-                        item.parent_id == boardlist.get(page).id
-                    }
+            addSource(getTaskList()) { tasklist ->
+                value = tasklist.filter { item ->
+                    item.parent_id == listBoardItem.get(page).id
                 }
+
             }
         }
-
 
     fun getTasksOnDate(date: String): LiveData<List<TaskItem>> =
         Transformations.map(getTaskList()) {
@@ -354,5 +361,4 @@ class MainViewModel(
                 date == SimpleDateFormat("yyyy-MM-dd").format(formatter.parse(item.date))
             }
         }
-
 }

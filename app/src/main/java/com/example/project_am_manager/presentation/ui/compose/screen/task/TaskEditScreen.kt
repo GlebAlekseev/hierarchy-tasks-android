@@ -11,7 +11,6 @@ import androidx.compose.material.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -23,16 +22,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.project_am_manager.domain.entity.BoardItem
 import com.example.project_am_manager.presentation.viewmodel.TaskViewModel
 import kotlinx.coroutines.launch
-import java.lang.Exception
-import java.lang.RuntimeException
 
 
 @Composable
 fun TaskEditScreen(
-    viewModel: TaskViewModel
+    viewModel: TaskViewModel,
 ) {
     val stateModalEdit by viewModel.stateModal.collectAsState()
     val currentDate by viewModel.currentDate.collectAsState()

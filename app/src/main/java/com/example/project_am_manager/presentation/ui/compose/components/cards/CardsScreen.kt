@@ -1,6 +1,4 @@
-@file:OptIn(ExperimentalPagerApi::class)
-
-package com.skyyo.expandablelist.cards
+package com.example.project_am_manager.presentation.ui.compose.components.cards
 
 import android.annotation.SuppressLint
 import androidx.compose.animation.*
@@ -33,7 +31,6 @@ import com.example.project_am_manager.domain.entity.BoardItem
 import com.example.project_am_manager.presentation.viewmodel.IGuaranteeViewModel
 import com.example.project_am_manager.presentation.viewmodel.MainViewModel
 import com.example.project_am_manager.presentation.viewmodel.TaskViewModel
-import com.google.accompanist.pager.ExperimentalPagerApi
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
 
@@ -41,12 +38,10 @@ import kotlinx.coroutines.launch
 @Composable
 fun BoardsScreen(
     viewModel: IGuaranteeViewModel,
-    isEdit: Boolean
+    isEdit: Boolean,
 ) {
     val expandedCardIds by viewModel.expandedBoardIdsList.collectAsState()
-    val itemsForLazyColumn by if (isEdit) viewModel.getBoardsIsParent().observeAsState(emptyList())
-    else viewModel.getBoardsWithChildrenHaveTasks().observeAsState(emptyList())
-
+    val itemsForLazyColumn by viewModel.getBoardsIsParent().observeAsState(emptyList())
     Scaffold(
         backgroundColor = Color(
             ContextCompat.getColor(
@@ -77,7 +72,7 @@ fun ExpandableCard(
     onCardArrowClick: () -> Unit,
     expanded: Boolean,
     board: BoardItem,
-    isEdit: Boolean
+    isEdit: Boolean,
 ) {
     val transitionState = remember {
         MutableTransitionState(expanded).apply {
@@ -85,42 +80,21 @@ fun ExpandableCard(
         }
     }
     val transition = updateTransition(transitionState, label = "transition")
-
     val cardBgColor by transition.animateColor({
         tween(durationMillis = EXPAND_ANIMATION_DURATION)
     }, label = "bgColorTransition") {
         if (expanded) Color.White else Color(62, 125, 250)
     }
-
     val cardColor by transition.animateColor({
         tween(durationMillis = EXPAND_ANIMATION_DURATION)
     }, label = "colorTransition") {
         if (expanded) Color.Black else Color.White
-    }
-    val cardPaddingHorizontal by transition.animateDp({
-        tween(durationMillis = EXPAND_ANIMATION_DURATION)
-    }, label = "paddingTransition") {
-        if (expanded) 48.dp else 24.dp
-    }
-    val cardElevation by transition.animateDp({
-        tween(durationMillis = EXPAND_ANIMATION_DURATION)
-    }, label = "elevationTransition") {
-        if (expanded) 24.dp else 4.dp
-    }
-    val cardRoundedCorners by transition.animateDp({
-        tween(
-            durationMillis = EXPAND_ANIMATION_DURATION,
-            easing = FastOutSlowInEasing
-        )
-    }, label = "cornersTransition") {
-        if (expanded) 0.dp else 16.dp
     }
     val arrowRotationDegree by transition.animateFloat({
         tween(durationMillis = EXPAND_ANIMATION_DURATION)
     }, label = "rotationDegreeTransition") {
         if (expanded) 0f else 180f
     }
-
     Card(
         backgroundColor = cardBgColor,
         contentColor = cardColor,
@@ -153,7 +127,7 @@ fun ExpandableCard(
 @Composable
 fun CardArrow(
     degrees: Float,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) {
     IconButton(
         onClick = onClick,
@@ -187,16 +161,11 @@ fun ExpandableContent(
     viewModel: IGuaranteeViewModel,
     board: BoardItem,
     visible: Boolean = true,
-    isEdit: Boolean
+    isEdit: Boolean,
 ) {
     val stateModal by viewModel.stateModal.collectAsState()
-    val indexAnimateTarget by viewModel.indexAnimateTarget.collectAsState()
-    val pagerState by viewModel.pagerState.collectAsState()
     val scope = rememberCoroutineScope()
-    val itemsForParent by if (isEdit) viewModel.getBoardsForParent(board.id)
-        .observeAsState(emptyList())
-    else viewModel.getBoardsForParentWithChildrenHaveTasks(board.id).observeAsState(emptyList())
-
+    val itemsForParent by viewModel.getBoardsForParent(board.id).observeAsState(emptyList())
     val enterFadeIn = remember {
         fadeIn(
             animationSpec = TweenSpec(
@@ -220,6 +189,7 @@ fun ExpandableContent(
         shrinkVertically(animationSpec = tween(COLLAPSE_ANIMATION_DURATION))
     }
     val shape = RoundedCornerShape(5.dp)
+
     AnimatedVisibility(
         visible = visible,
         enter = enterExpand + enterFadeIn,
@@ -233,22 +203,20 @@ fun ExpandableContent(
             itemsForParent.forEach {
                 Box(modifier = Modifier
                     .clickable {
-                        if (isEdit && viewModel is TaskViewModel) viewModel.setTransmittedParentId(
-                            it.id
-                        )
-                        scope.launch {
-                            if (!isEdit && viewModel is MainViewModel) {
+                        if (isEdit && viewModel is TaskViewModel) {
+                            viewModel.setTransmittedParentId(it.id)
+                            scope.launch {
                                 stateModal.hide()
-                                viewModel.setCurrentBoardId(it.id)
-                                viewModel.refreshIndexAnimateTarget()
-                                if (indexAnimateTarget != -1) {
-                                    pagerState.animateScrollToPage(indexAnimateTarget)
-//                                    pagerState.animateScrollToPage(indexAnimateTarget)
-                                }
-                            } else if (isEdit) {
-                                viewModel.stateModal.value.hide()
                             }
                         }
+                        if (viewModel is MainViewModel) {
+                            viewModel.setParentBoardId(it.parent_id)
+                            scope.launch {
+                                stateModal.hide()
+                                viewModel.setCurrentBoardId(it.id)
+                            }
+                        }
+
                     }
                     .padding(5.dp)
                     .border(BorderStroke(3.dp, Color(66, 142, 255)), shape)

@@ -8,7 +8,7 @@ import com.example.project_am_manager.data.database.model.BoardDbModel
 @Dao
 interface BoardDao {
     @Query("SELECT * FROM BoardDbModel WHERE id = :id")
-    fun get(id: Long): BoardDbModel
+    fun get(id: Long): BoardDbModel?
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insert(boardDbModel: BoardDbModel)
     @Update

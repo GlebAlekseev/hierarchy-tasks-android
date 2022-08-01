@@ -1,4 +1,4 @@
-package com.skyyo.expandablelist.cards
+package com.example.project_am_manager.presentation.ui.compose.components.cards
 
 const val EXPAND_ANIMATION_DURATION = 300
 const val COLLAPSE_ANIMATION_DURATION = 300

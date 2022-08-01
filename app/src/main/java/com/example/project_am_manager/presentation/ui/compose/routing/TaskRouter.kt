@@ -12,8 +12,8 @@ sealed class TaskScreen(val titleResId: Int) {
 }
 
 object TaskRouter: Router<TaskScreen> {
-    override var currentScreen: MutableState<TaskScreen> = mutableStateOf(TaskScreen.View)
-    override var previousScreen: MutableState<TaskScreen> = mutableStateOf(TaskScreen.View)
+    override var currentScreen: MutableState<TaskScreen> = mutableStateOf(TaskScreen.Edit)
+    override var previousScreen: MutableState<TaskScreen> = mutableStateOf(TaskScreen.Edit)
 
     override fun navigateTo(destination: TaskScreen) {
         previousScreen.value = currentScreen.value

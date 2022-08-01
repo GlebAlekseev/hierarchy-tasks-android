@@ -8,7 +8,7 @@ import com.example.project_am_manager.data.database.model.TaskDbModel
 @Dao
 interface TaskDao {
     @Query("SELECT * FROM TaskDbModel WHERE id = :id")
-    fun get(id: Long): TaskDbModel
+    fun get(id: Long): TaskDbModel?
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insert(taskDbModel: TaskDbModel)
     @Update

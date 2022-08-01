@@ -2,6 +2,7 @@ package com.example.project_am_manager.presentation.ui.compose.content
 
 import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -12,8 +13,6 @@ import com.example.project_am_manager.presentation.ui.compose.screen.main.MainHi
 import com.example.project_am_manager.presentation.ui.compose.screen.main.MainHomeScreen
 import com.example.project_am_manager.presentation.ui.compose.topbar.MainHierarchyTopBar
 import com.example.project_am_manager.presentation.ui.compose.topbar.MainHomeTopBar
-import com.example.project_am_manager.presentation.ui.compose.utils.enterTransition
-import com.example.project_am_manager.presentation.ui.compose.utils.exitTransition
 import com.example.project_am_manager.presentation.viewmodel.MainViewModel
 import com.google.accompanist.navigation.animation.AnimatedNavHost
 import com.google.accompanist.navigation.animation.composable
@@ -34,25 +33,35 @@ fun MainContent(viewModel: MainViewModel) {
         composable(
             Home,
             enterTransition = {
-                enterTransition(
-                    300,
-                    Hierarchy,
-                    AnimatedContentScope.SlideDirection.Right,
-                    History,
-                    AnimatedContentScope.SlideDirection.Right,
-                    this
-                )
+                when (initialState.destination.route) {
+                    Hierarchy ->
+                        slideIntoContainer(
+                            AnimatedContentScope.SlideDirection.Right,
+                            animationSpec = tween(300)
+                        )
+                    History ->
+                        slideIntoContainer(
+                            AnimatedContentScope.SlideDirection.Right,
+                            animationSpec = tween(300)
+                        )
+                    else -> null
+                }
             },
             exitTransition = {
-                exitTransition(
-                    300,
-                    Hierarchy,
-                    AnimatedContentScope.SlideDirection.Left,
-                    History,
-                    AnimatedContentScope.SlideDirection.Left,
-                    this
-                )
-            }
+                when (targetState.destination.route) {
+                    Hierarchy ->
+                        slideOutOfContainer(
+                            AnimatedContentScope.SlideDirection.Left,
+                            animationSpec = tween(300)
+                        )
+                    History ->
+                        slideOutOfContainer(
+                            AnimatedContentScope.SlideDirection.Left,
+                            animationSpec = tween(300)
+                        )
+                    else -> null
+                }
+            },
         ) {
             viewModel.setScreenState(MainScreen.Home)
             Column() {
@@ -63,24 +72,34 @@ fun MainContent(viewModel: MainViewModel) {
         composable(
             Hierarchy,
             enterTransition = {
-                enterTransition(
-                    300,
-                    Home,
-                    AnimatedContentScope.SlideDirection.Left,
-                    History,
-                    AnimatedContentScope.SlideDirection.Right,
-                    this
-                )
+                when (initialState.destination.route) {
+                    Home ->
+                        slideIntoContainer(
+                            AnimatedContentScope.SlideDirection.Left,
+                            animationSpec = tween(300)
+                        )
+                    History ->
+                        slideIntoContainer(
+                            AnimatedContentScope.SlideDirection.Right,
+                            animationSpec = tween(300)
+                        )
+                    else -> null
+                }
             },
             exitTransition = {
-                exitTransition(
-                    300,
-                    Home,
-                    AnimatedContentScope.SlideDirection.Right,
-                    History,
-                    AnimatedContentScope.SlideDirection.Left,
-                    this
-                )
+                when (targetState.destination.route) {
+                    Home ->
+                        slideOutOfContainer(
+                            AnimatedContentScope.SlideDirection.Right,
+                            animationSpec = tween(300)
+                        )
+                    History ->
+                        slideOutOfContainer(
+                            AnimatedContentScope.SlideDirection.Left,
+                            animationSpec = tween(300)
+                        )
+                    else -> null
+                }
             },
         ) {
             viewModel.setScreenState(MainScreen.Hierarchy)
@@ -92,24 +111,34 @@ fun MainContent(viewModel: MainViewModel) {
         composable(
             History,
             enterTransition = {
-                enterTransition(
-                    300,
-                    Home,
-                    AnimatedContentScope.SlideDirection.Left,
-                    Hierarchy,
-                    AnimatedContentScope.SlideDirection.Left,
-                    this
-                )
+                when (initialState.destination.route) {
+                    Home ->
+                        slideIntoContainer(
+                            AnimatedContentScope.SlideDirection.Left,
+                            animationSpec = tween(300)
+                        )
+                    Hierarchy ->
+                        slideIntoContainer(
+                            AnimatedContentScope.SlideDirection.Left,
+                            animationSpec = tween(300)
+                        )
+                    else -> null
+                }
             },
             exitTransition = {
-                exitTransition(
-                    300,
-                    Home,
-                    AnimatedContentScope.SlideDirection.Right,
-                    Hierarchy,
-                    AnimatedContentScope.SlideDirection.Right,
-                    this
-                )
+                when (targetState.destination.route) {
+                    Home ->
+                        slideOutOfContainer(
+                            AnimatedContentScope.SlideDirection.Right,
+                            animationSpec = tween(300)
+                        )
+                    Hierarchy ->
+                        slideOutOfContainer(
+                            AnimatedContentScope.SlideDirection.Right,
+                            animationSpec = tween(300)
+                        )
+                    else -> null
+                }
             },
         ) {
             viewModel.setScreenState(MainScreen.History)

@@ -35,7 +35,6 @@ fun TaskCard(viewModel: MainViewModel, taskItem: TaskItem) {
     val shape = RoundedCornerShape(4.dp)
     val context = LocalContext.current
     var expanded by remember { mutableStateOf(false) }
-    val currentBoardId by viewModel.currentBoardId.collectAsState()
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -50,7 +49,7 @@ fun TaskCard(viewModel: MainViewModel, taskItem: TaskItem) {
             .height(100.dp)
             .combinedClickable(
                 onClick = {
-                    val intent = TaskActivity.newIntentEditTask(context, taskItem.id, currentBoardId)
+                    val intent = TaskActivity.newIntentEditTask(context, taskItem.id)
                     context.startActivity(intent)
                 },
                 onLongClick = {

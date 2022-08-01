@@ -26,11 +26,15 @@ class TaskActivity : ComponentActivity() {
         val id_current_board: Long = intent.getLongExtra(CURRENT_BOARD, 0)
 
         if (savedInstanceState == null) {
-            viewModel.setTransmittedId(id)
-            if (viewModel.transmittedParentId.value == 0L)
+            if (id != 0L) {
+                viewModel.setTransmittedId(id)
+                viewModel.setTransmittedParentId(viewModel.getTask(id).parent_id)
+            } else if (id_current_board != 0L) {
                 viewModel.setTransmittedParentId(id_current_board)
+            } else {
+                throw RuntimeException("bad EXTRA for TaskActivity")
+            }
         }
-
         setContent {
             TaskApp(viewModel)
         }
@@ -46,10 +50,9 @@ class TaskActivity : ComponentActivity() {
             return intent
         }
 
-        fun newIntentEditTask(context: Context, transmittedId: Long, currentBoardId: Long): Intent {
+        fun newIntentEditTask(context: Context, transmittedId: Long): Intent {
             val intent = Intent(context, TaskActivity::class.java)
             intent.putExtra(TRANSMITTED_ID, transmittedId)
-            intent.putExtra(CURRENT_BOARD, currentBoardId)
             return intent
         }
     }

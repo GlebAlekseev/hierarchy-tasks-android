@@ -1,5 +1,6 @@
-@file:OptIn(ExperimentalFoundationApi::class, ExperimentalFoundationApi::class,
-    ExperimentalPagerApi::class
+@file:OptIn(
+    ExperimentalFoundationApi::class, ExperimentalFoundationApi::class,
+    ExperimentalPagerApi::class, ExperimentalFoundationApi::class
 )
 
 package com.example.project_am_manager.presentation.viewmodel
@@ -10,6 +11,7 @@ import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.ModalBottomSheetState
 import androidx.compose.material.ModalBottomSheetValue
 import androidx.lifecycle.LiveData
+import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.Transformations
 import androidx.lifecycle.ViewModel
 import com.example.project_am_manager.domain.entity.BoardItem
@@ -21,13 +23,15 @@ import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.PagerState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import routing.MainScreen
 import routing.TaskScreen
 import java.text.SimpleDateFormat
 import java.util.*
 
 @OptIn(ExperimentalMaterialApi::class)
-class TaskViewModel(private val repositoryTask: TaskListRepository, private val repositoryBoard: BoardListRepository) : ViewModel(),IGuaranteeViewModel{
+class TaskViewModel(
+    private val repositoryTask: TaskListRepository,
+    private val repositoryBoard: BoardListRepository,
+) : ViewModel(), IGuaranteeViewModel {
 
     private val addBoardItemUseCase = AddBoardItemUseCase(repositoryBoard)
     private val addTaskItemUseCase = AddTaskItemUseCase(repositoryTask)
@@ -87,33 +91,36 @@ class TaskViewModel(private val repositoryTask: TaskListRepository, private val 
 
 // ViewScreen
 
-
-
-    private val _currentDate = MutableStateFlow(SimpleDateFormat("dd:MM:yyyy hh:mm:ss").format(Date()))
+    private val _currentDate =
+        MutableStateFlow(SimpleDateFormat("dd:MM:yyyy hh:mm:ss").format(Date()))
     val currentDate: StateFlow<String>
         get() = _currentDate
-    fun setCurrentDate(value:String){
+
+    fun setCurrentDate(value: String) {
         _currentDate.value = value
     }
 
     private val _descriptionTextFieldEdit = MutableStateFlow("")
     val descriptionTextFieldEdit: StateFlow<String>
         get() = _descriptionTextFieldEdit
-    fun setDescriptionTextFieldEdit(value:String){
+
+    fun setDescriptionTextFieldEdit(value: String) {
         _descriptionTextFieldEdit.value = value
     }
 
     private val _nameTextFieldEdit = MutableStateFlow("")
     val nameTextFieldEdit: StateFlow<String>
         get() = _nameTextFieldEdit
-    fun setNameTextFieldEdit(value:String){
+
+    fun setNameTextFieldEdit(value: String) {
         _nameTextFieldEdit.value = value
     }
 
     private val _transmittedParentId = MutableStateFlow(0L)
     val transmittedParentId: StateFlow<Long>
         get() = _transmittedParentId
-    fun setTransmittedParentId(value:Long){
+
+    fun setTransmittedParentId(value: Long) {
         _transmittedParentId.value = value
     }
 
@@ -123,7 +130,6 @@ class TaskViewModel(private val repositoryTask: TaskListRepository, private val 
     private val _stateModal = MutableStateFlow(ModalBottomSheetState(ModalBottomSheetValue.Hidden))
     override val stateModal: StateFlow<ModalBottomSheetState>
         get() = _stateModal
-
 
 
     private val _relocationRequester = MutableStateFlow(BringIntoViewRequester())
@@ -137,7 +143,8 @@ class TaskViewModel(private val repositoryTask: TaskListRepository, private val 
     private val _openDialogSave = MutableStateFlow(false)
     val openDialogSave: StateFlow<Boolean>
         get() = _openDialogSave
-    fun setOpenDialogSave(value:Boolean){
+
+    fun setOpenDialogSave(value: Boolean) {
         _openDialogSave.value = value
     }
 
@@ -146,18 +153,16 @@ class TaskViewModel(private val repositoryTask: TaskListRepository, private val 
     private val _transmittedId = MutableStateFlow(0L)
     val transmittedId: StateFlow<Long>
         get() = _transmittedId
-    fun setTransmittedId(value:Long){
+
+    fun setTransmittedId(value: Long) {
         _transmittedId.value = value
-        if (value != 0L){
-            val currentTask = getTaskList().value?.filter { it.id == value }?.firstOrNull()
-            _nameTextFieldEdit.value = currentTask.let { if (it != null) it.name else  "error"}
-            _descriptionTextFieldEdit.value = currentTask.let { if (it != null) it.description else  "error"}
-            _currentDate.value = currentTask.let { if (it != null) it.date else  "error"}
-            _transmittedParentId.value = currentTask.let { if (it != null) it.parent_id else  0L}
-        }
+        val currentTask = getTask(value)
+        _nameTextFieldEdit.value = currentTask.name
+        _descriptionTextFieldEdit.value = currentTask.description
+        _currentDate.value = currentTask.date
+//            _transmittedParentId.value = currentTask.let { if (it != null) it.parent_id else  0L}
+
     }
-
-
 
 
     private val _expandedBoardIdsList = MutableStateFlow(listOf<Long>())
@@ -173,6 +178,7 @@ class TaskViewModel(private val repositoryTask: TaskListRepository, private val 
     private var _screenState: MutableStateFlow<TaskScreen> = MutableStateFlow(TaskScreen.View)
     val screenState: StateFlow<TaskScreen>
         get() = _screenState
+
     fun setScreenState(value: TaskScreen) {
         _screenState.value = value
     }
@@ -184,38 +190,6 @@ class TaskViewModel(private val repositoryTask: TaskListRepository, private val 
 
     override val pagerState: StateFlow<PagerState>
         get() = MutableStateFlow(PagerState(0))
-
-//
-//    private val _parentBoardId = MutableStateFlow(1L)
-//    val parentBoardId: StateFlow<Long>
-//        get() = _parentBoardId
-//    fun setParentBoardId(value:Long){
-//        _parentBoardId.value = value
-//    }
-//
-//
-
-//
-//
-//
-//    @OptIn(ExperimentalMaterialApi::class)
-//    private var _screenStateMain:MutableStateFlow<Screen> = MutableStateFlow(Screen.Home)
-//    @OptIn(ExperimentalMaterialApi::class)
-//    val screenStateMain: StateFlow<Screen>
-//        get() = _screenStateMain
-//    fun setScreenStateMain(value:Screen){
-//        _screenStateMain.value = value
-//    }
-//
-//
-
-
-
-
-
-
-
-
 
 
     ////////////////////
@@ -232,35 +206,42 @@ class TaskViewModel(private val repositoryTask: TaskListRepository, private val 
                 item.parent_id == parentId
             }
         }
+
     override fun getBoardsForParentWithChildrenHaveTasks(parentId: Long): LiveData<List<BoardItem>> =
-        Transformations.map(getBoardsForParent(parentId)) {
-            it.filter { item ->
-                item.parent_id == parentId && isBoardHaveTasks(item)
+        MediatorLiveData<List<BoardItem>>().apply {
+            addSource(getTaskList()) { tasklist ->
+                addSource(getBoardsForParent(parentId)) { boardlist ->
+                    value = boardlist.filter { item ->
+                        item.parent_id == parentId && (isBoardHaveTasks(item,
+                            tasklist) || item.id == parentId)
+                    }
+                }
             }
         }
 
-    private fun isBoardParent(boardItem: BoardItem): Boolean {
-        return !getBoardList().value?.filter { it.parent_id == boardItem.id }.isNullOrEmpty()
+    private fun isBoardParent(boardItem: BoardItem, boardList: List<BoardItem>): Boolean {
+        return !boardList.filter { it.parent_id == boardItem.id }.isNullOrEmpty()
     }
 
-    private fun isBoardHaveTasks(boardItem: BoardItem): Boolean {
-        return !getTaskList().value?.filter { it.parent_id == boardItem.id }.isNullOrEmpty()
+    private fun isBoardHaveTasks(boardItem: BoardItem, taskList: List<TaskItem>): Boolean {
+        return !taskList.filter { it.parent_id == boardItem.id }.isNullOrEmpty()
     }
 
-    // Все доски, у которых есть дети
     override fun getBoardsIsParent(): LiveData<List<BoardItem>> =
         Transformations.map(getBoardList()) {
             it.filter { item ->
-                isBoardParent(item)
+                isBoardParent(item, it)
             }
         }
 
     override fun getBoardsWithChildrenHaveTasks(): LiveData<List<BoardItem>> =
-        Transformations.map(getBoardsIsParent()) {
-            it.filter { item ->
-                isBoardHaveTasks(item)
+        MediatorLiveData<List<BoardItem>>().apply {
+            addSource(getTaskList()) { tasklist ->
+                addSource(getBoardsIsParent()) { boardlist ->
+                    value = boardlist.filter { item ->
+                        isBoardHaveTasks(item, tasklist)
+                    }
+                }
             }
         }
-
-
 }

@@ -7,7 +7,6 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
@@ -17,13 +16,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.project_am_manager.domain.entity.BoardItem
 import com.example.project_am_manager.presentation.viewmodel.TaskViewModel
-import java.lang.RuntimeException
 
 @Composable
 fun TaskViewScreen(
-    viewModel: TaskViewModel
+    viewModel: TaskViewModel,
 ) {
     val currentDate by viewModel.currentDate.collectAsState()
     val descriptionTextFieldEdit by viewModel.descriptionTextFieldEdit.collectAsState()

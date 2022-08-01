@@ -17,8 +17,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.example.project_am_manager.domain.entity.BoardItem
-import com.example.project_am_manager.domain.entity.TaskItem
 import com.example.project_am_manager.presentation.ui.compose.components.TaskCard
 import com.example.project_am_manager.presentation.viewmodel.MainViewModel
 import com.google.accompanist.pager.ExperimentalPagerApi
@@ -28,12 +26,13 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun MainHomeScreen(
-    viewModel: MainViewModel
+    viewModel: MainViewModel,
 ) {
     val scope = rememberCoroutineScope()
     val pagerState by viewModel.pagerState.collectAsState()
     val parentBoardId by viewModel.parentBoardId.collectAsState()
-    val boardsForParentWithChildrenHaveTasks by viewModel.getBoardsForParentWithChildrenHaveTasks(parentBoardId).observeAsState(emptyList())
+    val boardsForParent by viewModel.getBoardsForParent(parentBoardId).observeAsState(emptyList())
+
     Column(modifier = Modifier.fillMaxSize()) {
         ScrollableTabRow(
             selectedTabIndex = pagerState.currentPage,
@@ -43,7 +42,7 @@ fun MainHomeScreen(
                 )
             },
         ) {
-            boardsForParentWithChildrenHaveTasks.forEachIndexed { index, board ->
+            boardsForParent.forEachIndexed { index, board ->
                 Tab(
                     text = {
                         Text(
@@ -52,29 +51,33 @@ fun MainHomeScreen(
                             color = Color(53, 156, 252)
                         )
                     },
-                    selected = pagerState.currentPage == index,
+                    selected = if (pagerState.currentPage == index) {
+                        scope.launch {
+                            viewModel.setCurrentBoardId(boardsForParent[index].id)
+                        }
+                        true
+                    } else false,
                     onClick = {
                         scope.launch {
-//                             Смена текущей currentBoard
-                            viewModel.setCurrentBoardId(boardsForParentWithChildrenHaveTasks[index].id)
-                            pagerState.animateScrollToPage(index)
+                            viewModel.setCurrentBoardId(boardsForParent[index].id)
                         }
                     }, selectedContentColor = Color.Black, unselectedContentColor = Color.LightGray
                 )
             }
         }
         HorizontalPager(
-            count = boardsForParentWithChildrenHaveTasks.size,
+            count = boardsForParent.size,
             state = pagerState,
             modifier = Modifier.fillMaxSize()
         ) { page ->
-            val tasksForBoardsForParentWithChildrenHaveTasks
-            by viewModel.getTasksForBoardsForParentWithChildrenHaveTasks(parentBoardId,page).observeAsState(emptyList())
+            val tasksForBoardsForParent
+                    by viewModel.getTasksForBoardsForParent(boardsForParent, page)
+                        .observeAsState(emptyList())
             LazyColumn(modifier = Modifier.fillMaxHeight()) {
-                itemsIndexed(items = tasksForBoardsForParentWithChildrenHaveTasks,
+                itemsIndexed(items = tasksForBoardsForParent,
                     itemContent = { index, item ->
                         TaskCard(viewModel, item)
-                        val count = tasksForBoardsForParentWithChildrenHaveTasks.size
+                        val count = tasksForBoardsForParent.size
                         if (index == count - 1) {
                             Spacer(
                                 modifier = Modifier

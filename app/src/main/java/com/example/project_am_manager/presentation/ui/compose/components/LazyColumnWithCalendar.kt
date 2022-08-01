@@ -25,7 +25,6 @@ fun LazyColumnWithCalendar(viewModel: MainViewModel) {
         mutableStateOf(SimpleDateFormat("yyyy-MM-dd").format(Date()))
     }
     val tasksOnDate by viewModel.getTasksOnDate(currentDate.value).observeAsState(emptyList())
-
     val zeroTaskModel = listOf(TaskItem("", "", "", Color.Black, 0, 0))
     LazyColumn(modifier = Modifier.fillMaxSize()) {
         itemsIndexed(zeroTaskModel + tasksOnDate, itemContent = { index, item ->

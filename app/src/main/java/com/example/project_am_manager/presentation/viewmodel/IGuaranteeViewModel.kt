@@ -37,7 +37,6 @@ interface IGuaranteeViewModel {
     val indexAnimateTarget: StateFlow<Int>
     val pagerState: StateFlow<PagerState>
 
-
     fun getBoardsIsParent(): LiveData<List<BoardItem>>
     fun getBoardsWithChildrenHaveTasks(): LiveData<List<BoardItem>>
     fun getBoardsForParent(parentId: Long): LiveData<List<BoardItem>>

@@ -25,6 +25,7 @@ import com.example.project_am_manager.R
 import com.example.project_am_manager.domain.entity.BoardItem
 import com.example.project_am_manager.presentation.viewmodel.MainViewModel
 import kotlinx.coroutines.launch
+import java.lang.Exception
 
 
 @Composable
@@ -32,7 +33,6 @@ fun MainHomeTopBar(
     viewModel: MainViewModel
 ) {
     val scope = rememberCoroutineScope()
-    val allBoards: List<BoardItem> by viewModel.getBoardList().observeAsState(emptyList())
     val stateModal by viewModel.stateModal.collectAsState()
     val parentBoardId by viewModel.parentBoardId.collectAsState()
 
@@ -43,7 +43,7 @@ fun MainHomeTopBar(
             .background(
                 Brush.linearGradient(
                     colors = listOf(
-                        Color(62, 125, 250), //purple-blue grad
+                        Color(62, 125, 250),
                         Color(134, 124, 247)
                     )
                 )
@@ -60,8 +60,7 @@ fun MainHomeTopBar(
             }
         }) {
             Text(
-                text = allBoards.filter { it.id == parentBoardId }.firstOrNull()
-                    .let { if (it != null) it.name else "" },
+                text = try{ viewModel.getBoard(parentBoardId).name } catch (e: Exception){ "Unknown" },
                 modifier = Modifier.offset(0.dp, 7.dp),
                 color = Color.White,
                 fontWeight = FontWeight.Bold,

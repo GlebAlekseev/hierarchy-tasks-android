@@ -10,6 +10,7 @@ import com.example.project_am_manager.domain.mapper.Mapper
 import com.example.project_am_manager.domain.repository.BoardListRepository
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import java.lang.RuntimeException
 import javax.inject.Inject
 
 
@@ -19,14 +20,14 @@ class BoardListRepositoryImpl @Inject constructor(private val boardListDao: Boar
     }
 
     private fun initDatabase() {
-        GlobalScope.launch {
-            val rootBoard = BoardDbModel.ROOT_BOARD
-            val helperBoard = BoardDbModel.HELPER_BOARD
-            if (boardListDao.getAll().value?.isEmpty() == true){
-                boardListDao.insert(rootBoard)
-                boardListDao.insert(helperBoard)
+            boardListDao.getAll().observeForever{
+                val rootBoard = BoardDbModel.ROOT_BOARD
+                val helperBoard = BoardDbModel.HELPER_BOARD
+                if (it.isEmpty()){
+                    boardListDao.insert(rootBoard)
+                    boardListDao.insert(helperBoard)
+                }
             }
-        }
     }
 
     override fun addBoardItem(boardItem: BoardItem) {
@@ -42,7 +43,7 @@ class BoardListRepositoryImpl @Inject constructor(private val boardListDao: Boar
     }
 
     override fun getBoardItem(boardItemId: Long): BoardItem {
-        return mapper.mapDbModelToItem(boardListDao.get(boardItemId))
+        return mapper.mapDbModelToItem(boardListDao.get(boardItemId) ?: throw RuntimeException("boardItemId: $boardItemId not exist"))
     }
 
     override fun getBoardList(): LiveData<List<BoardItem>> = Transformations.map(boardListDao.getAll()){

@@ -21,7 +21,7 @@ import com.example.project_am_manager.presentation.viewmodel.MainViewModel
 
 @Composable
 fun MainBottomBar(
-    viewModel: MainViewModel
+    viewModel: MainViewModel,
 ) {
     val animateNavController by viewModel.animateNavController.collectAsState()
     val selectedNavPage by viewModel.selectedNavPage.collectAsState()

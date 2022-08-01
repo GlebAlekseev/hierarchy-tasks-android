@@ -36,20 +36,21 @@ import androidx.compose.ui.unit.dp
 import com.example.project_am_manager.R
 import com.example.project_am_manager.domain.entity.BoardItem
 import com.example.project_am_manager.presentation.viewmodel.MainViewModel
+import kotlinx.coroutines.launch
 import routing.MainScreen
 import kotlin.math.roundToInt
 
 
 @Composable
 fun MainHierarchyScreen(
-    viewModel: MainViewModel
+    viewModel: MainViewModel,
 ) {
     TransformableArea(viewModel)
 }
 
 @Composable
 fun TransformableArea(
-    viewModel: MainViewModel
+    viewModel: MainViewModel,
 ) {
     val state_scroll_horizontal = rememberScrollState()
     val state_scroll_vertical = rememberScrollState()
@@ -93,7 +94,7 @@ fun TransformableArea(
 
 @Composable
 fun BuildingHierarchy(
-    viewModel: MainViewModel
+    viewModel: MainViewModel,
 ) {
     Row() {
         val listOffsetsBoards: MutableList<boardBlock> = remember {
@@ -125,7 +126,7 @@ fun BuildingHierarchy(
 fun ColumnZ(
     viewModel: MainViewModel,
     idBoard: Long,
-    listOffsetsBoards: MutableList<boardBlock>
+    listOffsetsBoards: MutableList<boardBlock>,
 ) {
     if (idBoard == 0L) return
     val startY = remember {
@@ -186,7 +187,7 @@ data class boardBlock(
     var board: BoardItem,
     var offset: MutableState<Offset>,
     var selected: MutableState<Boolean>,
-    var size: MutableState<IntSize>
+    var size: MutableState<IntSize>,
 )
 
 @OptIn(
@@ -197,7 +198,7 @@ data class boardBlock(
 fun Board(
     viewModel: MainViewModel,
     board: BoardItem,
-    listOffsetsBoards: MutableList<boardBlock>
+    listOffsetsBoards: MutableList<boardBlock>,
 ) {
     val screenHierarchyState by viewModel.screenHierarchyState.collectAsState()
     val allBoards: List<BoardItem> by viewModel.getBoardList().observeAsState(emptyList())
@@ -208,6 +209,7 @@ fun Board(
     val offset_global = remember {
         mutableStateOf(Offset.Zero)
     }
+    val scope = rememberCoroutineScope()
     val requestDisallowInterceptTouchEvent = RequestDisallowInterceptTouchEvent()
     requestDisallowInterceptTouchEvent.invoke(true)
 
@@ -235,68 +237,82 @@ fun Board(
             )
         }
         .onGloballyPositioned {
-            offset_global.value = it.positionInRoot()
-            if (!listOffsetsBoards.contains(
-                    boardBlock(
-                        board,
-                        offset_global,
-                        selected,
-                        sizeState
+            scope.launch {
+                offset_global.value = it.positionInRoot()
+                if (!listOffsetsBoards.contains(
+                        boardBlock(
+                            board,
+                            offset_global,
+                            selected,
+                            sizeState
+                        )
                     )
                 )
-            )
-                listOffsetsBoards.add(boardBlock(board, offset_global, selected, sizeState))
+                    listOffsetsBoards.add(boardBlock(board, offset_global, selected, sizeState))
+            }
         }
         .pointerInput(Unit) {
             detectDragGestures(
                 onDrag = { pic, offset_ ->
-                    offset.value += offset_
-                    listOffsetsBoards.forEach {
-                        if (it.offset != offset_global && it.board != null) {
-                            if (it.offset.value.x + it.size.value.width / 2 >= offset_global.value.x && it.offset.value.x - it.size.value.width / 2 <= offset_global.value.x &&
-                                it.offset.value.y + it.size.value.height / 2 >= offset_global.value.y && it.offset.value.y - it.size.value.height / 2 <= offset_global.value.y &&
-                                (listOffsetsBoards.filter { a -> a.selected.value == true }.size == 0
-                                        || listOffsetsBoards.filter { a ->
-                                    a.selected.value == true && it.board == a.board
-                                            && it.board.let { if (it != null) it.id else 0L } == a.board.let { if (it != null) it.id else -1L }
-                                }.size == 1
-                                        )
-                                && !getAllParentsBoardIds(
-                                    it.board,
-                                    allBoards
-                                ).contains(board.let { if (it != null) it.id else 0L })
-                            ) {
-                                it.selected.value = true
-                            } else {
-                                it.selected.value = false
+                    scope.launch {
+                        offset.value += offset_
+                        listOffsetsBoards.forEach {
+                            if (it.offset != offset_global && it.board != null) {
+                                if (it.offset.value.x + it.size.value.width / 2 >= offset_global.value.x && it.offset.value.x - it.size.value.width / 2 <= offset_global.value.x &&
+                                    it.offset.value.y + it.size.value.height / 2 >= offset_global.value.y && it.offset.value.y - it.size.value.height / 2 <= offset_global.value.y &&
+                                    (listOffsetsBoards.filter { a -> a.selected.value == true }.size == 0
+                                            || listOffsetsBoards.filter { a ->
+                                        a.selected.value == true && it.board == a.board
+                                                && it.board.let { if (it != null) it.id else 0L } == a.board.let { if (it != null) it.id else -1L }
+                                    }.size == 1
+                                            )
+                                    && !getAllParentsBoardIds(
+                                        it.board,
+                                        allBoards
+                                    ).contains(board.let { if (it != null) it.id else 0L })
+                                ) {
+                                    it.selected.value = true
+                                } else {
+                                    it.selected.value = false
+                                }
                             }
                         }
                     }
                 },
                 onDragEnd = {
-                    if (listOffsetsBoards.filter { it.selected.value == true }.size >= 1) {
-                        if (screenHierarchyState == MainScreen.Hierarchy) {
-                            viewModel.setScreenHierarchyState(MainScreen.Hierarchy2)
+                    scope.launch {
+                        if (listOffsetsBoards.filter { it.selected.value == true }.size >= 1) {
+                            viewModel.editBoard(board.copy(
+                                parent_id = listOffsetsBoards
+                                    .filter { it.selected.value }
+                                    .last().board.id
+                            ))
+                            if (screenHierarchyState == MainScreen.Hierarchy) {
+                                viewModel.setScreenHierarchyState(MainScreen.Hierarchy2)
+                            } else {
+                                viewModel.setScreenHierarchyState(MainScreen.Hierarchy)
+                            }
                         } else {
-                            viewModel.setScreenHierarchyState(MainScreen.Hierarchy)
-                        }
-                    } else {
-                        // Сбросить назад
-                        if (screenHierarchyState == MainScreen.Hierarchy) {
-                            viewModel.setScreenHierarchyState(MainScreen.Hierarchy2)
-                        } else {
-                            viewModel.setScreenHierarchyState(MainScreen.Hierarchy)
+                            if (screenHierarchyState == MainScreen.Hierarchy) {
+                                viewModel.setScreenHierarchyState(MainScreen.Hierarchy2)
+                            } else {
+                                viewModel.setScreenHierarchyState(MainScreen.Hierarchy)
+                            }
                         }
                     }
                 })
         }
         .combinedClickable(
             onClick = {
-                viewModel.setCurrentBoardId(board.id)
+                scope.launch {
+                    viewModel.setCurrentHierarchyBoardId(board.id)
+                }
             },
             onLongClick = {
-                viewModel.setCurrentBoardId(board.id)
-                expanded = true
+                scope.launch {
+                    viewModel.setCurrentHierarchyBoardId(board.id)
+                    expanded = true
+                }
             },
         )
         .padding(15.dp)
@@ -310,7 +326,7 @@ fun Board(
         )
         Text(
             modifier = Modifier.align(Alignment.CenterHorizontally),
-            text = board.name.orEmpty(),
+            text = board.name,
             color = Color.Black
         )
         DropdownMenu(
@@ -330,8 +346,10 @@ fun Board(
             }
             if (board.let { if (it != null) it.id else 1L } != 1L) {
                 DropdownMenuItem(onClick = {
-                    if (board.id != 1L) {
-                        viewModel.deleteBoard(viewModel.getBoard(board.id))
+                    scope.launch {
+                        if (board.id != 1L) {
+                            viewModel.deleteBoard(viewModel.getBoard(board.id))
+                        }
                     }
                     expanded = false
                 }) {
@@ -341,7 +359,6 @@ fun Board(
         }
     }
 }
-
 
 fun getAllParentsBoardIds(board: BoardItem, listBoard: List<BoardItem>): List<Long> {
     var parentsBoard = mutableListOf<Long>()
